@@ -91,6 +91,8 @@ if (isset($_GET['api']) && $session_id > 0) {
 <head>
     <meta charset="UTF-8">
     <title>Grafik Progres Eksplorasi PID</title>
+    <link rel="icon" type="image/x-icon" href="logo.png" />
+    <link rel="apple-touch-icon" href="logo.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Pustaka Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -100,7 +102,7 @@ if (isset($_GET['api']) && $session_id > 0) {
     <div class="container-fluid" style="max-width: 1200px;">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="fw-bold text-primary mb-0">Statistik Eksplorasi PID</h2>
-            <a href="index" class="btn btn-outline-secondary">← Kembali ke Beranda</a>
+            <a href="/" class="btn btn-outline-secondary">← Kembali ke Beranda</a>
         </div>
 
         <?php if ($current_session): ?>

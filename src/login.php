@@ -35,6 +35,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <title>Login Host / Pengajar</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="logo.png" />
+    <link rel="apple-touch-icon" href="logo.png">
 </head>
 
 <body class="bg-dark text-white d-flex align-items-center vh-100">
@@ -54,6 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input type="password" name="password" class="form-control" required placeholder="Password">
                 </div>
                 <button type="submit" class="btn btn-warning w-100 fw-bold">Masuk</button>
+                <a href="panduan" target="_blank" class="btn btn-success w-100 fw-bold mt-2">Panduan</a>
             </form>
             <div class="text-center mt-3">
                 <a href="/" class="text-light text-decoration-none">← Kembali ke Halaman Peserta</a>
