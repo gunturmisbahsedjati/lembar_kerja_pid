@@ -10,6 +10,98 @@ if (!isset($_SESSION['host_logged_in'])) {
 
 $session_id = (int)($_GET['session_id'] ?? 0);
 
+// Ambil Informasi Sesi / PIN
+$stmt_session = $pdo->prepare("SELECT * FROM game_sessions WHERE id = ?");
+$stmt_session->execute([$session_id]);
+$session = $stmt_session->fetch();
+
+if (!$session) {
+    header("Location: host");
+    exit;
+}
+
+// ==========================================
+// FITUR EXPORT EXCEL
+// ==========================================
+if (isset($_GET['action']) && $_GET['action'] === 'export_excel') {
+    // Ambil semua daftar pertanyaan/fitur sesuai instrumen sesi
+    $stmt_features = $pdo->prepare("
+        SELECT f.id, f.feature_name, l.level_name 
+        FROM features f
+        JOIN levels l ON l.id = f.level_id
+        WHERE l.instrument_type = ?
+        ORDER BY l.level_order ASC, f.id ASC
+    ");
+    $stmt_features->execute([$session['instrument_type']]);
+    $features = $stmt_features->fetchAll(PDO::FETCH_ASSOC);
+
+    // Ambil semua peserta di sesi ini
+    $stmt_resp = $pdo->prepare("
+        SELECT id, name, institution, completed_level, created_at 
+        FROM respondents 
+        WHERE session_id = ? 
+        ORDER BY created_at DESC
+    ");
+    $stmt_resp->execute([$session_id]);
+    $respondents_data = $stmt_resp->fetchAll(PDO::FETCH_ASSOC);
+
+    // Ambil seluruh jawaban peserta
+    $stmt_all_ans = $pdo->prepare("
+        SELECT a.respondent_id, a.feature_id, a.status 
+        FROM answers a
+        JOIN respondents r ON r.id = a.respondent_id
+        WHERE r.session_id = ?
+    ");
+    $stmt_all_ans->execute([$session_id]);
+    $raw_answers = $stmt_all_ans->fetchAll(PDO::FETCH_ASSOC);
+
+    // Mapping jawaban [respondent_id][feature_id] = status
+    $answers_map = [];
+    foreach ($raw_answers as $ans) {
+        $answers_map[$ans['respondent_id']][$ans['feature_id']] = $ans['status'];
+    }
+
+    // Set Header untuk Download File Excel (.xls)
+    $filename = "Data_Peserta_PIN_" . $session['pin'] . "_" . date('Ymd_His') . ".xls";
+    header("Content-Type: application/vnd.ms-excel; charset=utf-8");
+    header("Content-Disposition: attachment; filename=\"$filename\"");
+    header("Pragma: no-cache");
+    header("Expires: 0");
+
+    echo "<table border='1'>";
+    echo "<tr style='background-color:#0d6efd; color:#ffffff; font-weight:bold;'>";
+    echo "<th>No</th>";
+    echo "<th>Nama Peserta</th>";
+    echo "<th>Instansi / Sekolah</th>";
+    echo "<th>Level Selesai</th>";
+    echo "<th>Waktu Bergabung</th>";
+
+    // Header Kolom Pertanyaan
+    foreach ($features as $f) {
+        echo "<th>[" . htmlspecialchars($f['level_name']) . "] " . htmlspecialchars($f['feature_name']) . "</th>";
+    }
+    echo "</tr>";
+
+    // Baris Data Peserta & Jawabannya
+    foreach ($respondents_data as $idx => $resp) {
+        echo "<tr>";
+        echo "<td>" . ($idx + 1) . "</td>";
+        echo "<td>" . htmlspecialchars($resp['name']) . "</td>";
+        echo "<td>" . htmlspecialchars($resp['institution']) . "</td>";
+        echo "<td>Level " . $resp['completed_level'] . "</td>";
+        echo "<td>" . date('d M Y H:i', strtotime($resp['created_at'])) . "</td>";
+
+        foreach ($features as $f) {
+            $status = $answers_map[$resp['id']][$f['id']] ?? 'Belum';
+            $bgColor = ($status === 'Sudah') ? '#d1e7dd' : '#f8d7da';
+            echo "<td style='background-color:$bgColor; text-align:center;'>" . $status . "</td>";
+        }
+        echo "</tr>";
+    }
+    echo "</table>";
+    exit;
+}
+
 // Proses Hapus Peserta & Jawabannya
 if (isset($_GET['action']) && $_GET['action'] === 'delete_respondent') {
     $respondent_id = (int)($_GET['respondent_id'] ?? 0);
@@ -41,7 +133,6 @@ if (isset($_GET['api']) && $_GET['api'] === 'get_answers') {
     header('Content-Type: application/json');
     $respondent_id = (int)($_GET['respondent_id'] ?? 0);
 
-    // Query hanya mengambil fitur/pertanyaan yang cocok dengan instrumen sesi peserta
     $stmt_ans = $pdo->prepare("
         SELECT 
             l.level_name,
@@ -60,16 +151,6 @@ if (isset($_GET['api']) && $_GET['api'] === 'get_answers') {
     $answers_detail = $stmt_ans->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode($answers_detail);
-    exit;
-}
-
-// Ambil Informasi Sesi / PIN
-$stmt_session = $pdo->prepare("SELECT * FROM game_sessions WHERE id = ?");
-$stmt_session->execute([$session_id]);
-$session = $stmt_session->fetch();
-
-if (!$session) {
-    header("Location: host");
     exit;
 }
 
@@ -104,7 +185,7 @@ $respondents = $stmt_respondents->fetchAll();
         <span class="text-white">Detail Responden</span>
     </nav>
 
-    <div class="container" style="max-width: 1050px;">
+    <div class="container" style="max-width: 1100px;">
         <?php if (isset($_GET['msg']) && $_GET['msg'] === 'deleted'): ?>
             <div class="alert alert-success alert-dismissible fade show">Peserta dan seluruh jawabannya berhasil dihapus!<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
         <?php elseif (isset($_GET['msg']) && $_GET['msg'] === 'error'): ?>
@@ -131,7 +212,13 @@ $respondents = $stmt_respondents->fetchAll();
         <div class="card shadow-sm border-0 p-4">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h4 class="fw-bold text-dark mb-0">Daftar Peserta (<?= count($respondents) ?>)</h4>
-                <a href="leaderboard?session_id=<?= $session['id'] ?>" target="_blank" class="btn btn-outline-info btn-sm">Lihat Leaderboard</a>
+                <div>
+                    <!-- Tombol Export Excel -->
+                    <a href="detail?session_id=<?= $session['id'] ?>&action=export_excel" class="btn btn-success btn-sm me-2 fw-bold">
+                        📊 Cetak Excel
+                    </a>
+                    <a href="leaderboard?session_id=<?= $session['id'] ?>" target="_blank" class="btn btn-outline-info btn-sm">Lihat Leaderboard</a>
+                </div>
             </div>
 
             <div class="table-responsive">
