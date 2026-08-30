@@ -10,6 +10,59 @@ if (!isset($_SESSION['host_logged_in'])) {
 
 $session_id = (int)($_GET['session_id'] ?? 0);
 
+// Proses Hapus Peserta & Jawabannya
+if (isset($_GET['action']) && $_GET['action'] === 'delete_respondent') {
+    $respondent_id = (int)($_GET['respondent_id'] ?? 0);
+
+    if ($respondent_id > 0) {
+        $pdo->beginTransaction();
+        try {
+            // Hapus jawaban peserta
+            $stmt_del_ans = $pdo->prepare("DELETE FROM answers WHERE respondent_id = ?");
+            $stmt_del_ans->execute([$respondent_id]);
+
+            // Hapus peserta
+            $stmt_del_resp = $pdo->prepare("DELETE FROM respondents WHERE id = ? AND session_id = ?");
+            $stmt_del_resp->execute([$respondent_id, $session_id]);
+
+            $pdo->commit();
+            header("Location: detail?session_id=" . $session_id . "&msg=deleted");
+            exit;
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            header("Location: detail?session_id=" . $session_id . "&msg=error");
+            exit;
+        }
+    }
+}
+
+// Endpoint AJAX: Mengambil Detail Pertanyaan & Jawaban Khusus Instrumen Peserta
+if (isset($_GET['api']) && $_GET['api'] === 'get_answers') {
+    header('Content-Type: application/json');
+    $respondent_id = (int)($_GET['respondent_id'] ?? 0);
+
+    // Query hanya mengambil fitur/pertanyaan yang cocok dengan instrumen sesi peserta
+    $stmt_ans = $pdo->prepare("
+        SELECT 
+            l.level_name,
+            f.feature_name, 
+            f.usage_practice,
+            COALESCE(a.status, 'Belum') as status
+        FROM respondents r
+        JOIN game_sessions gs ON gs.id = r.session_id
+        JOIN levels l ON l.instrument_type = gs.instrument_type
+        JOIN features f ON f.level_id = l.id
+        LEFT JOIN answers a ON a.feature_id = f.id AND a.respondent_id = r.id
+        WHERE r.id = ?
+        ORDER BY l.level_order ASC, f.id ASC
+    ");
+    $stmt_ans->execute([$respondent_id]);
+    $answers_detail = $stmt_ans->fetchAll(PDO::FETCH_ASSOC);
+
+    echo json_encode($answers_detail);
+    exit;
+}
+
 // Ambil Informasi Sesi / PIN
 $stmt_session = $pdo->prepare("SELECT * FROM game_sessions WHERE id = ?");
 $stmt_session->execute([$session_id]);
@@ -41,6 +94,8 @@ $respondents = $stmt_respondents->fetchAll();
     <meta charset="UTF-8">
     <title>Detail Responden - PIN <?= htmlspecialchars($session['pin']) ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Pustaka SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body class="bg-light">
@@ -49,7 +104,13 @@ $respondents = $stmt_respondents->fetchAll();
         <span class="text-white">Detail Responden</span>
     </nav>
 
-    <div class="container" style="max-width: 1000px;">
+    <div class="container" style="max-width: 1050px;">
+        <?php if (isset($_GET['msg']) && $_GET['msg'] === 'deleted'): ?>
+            <div class="alert alert-success alert-dismissible fade show">Peserta dan seluruh jawabannya berhasil dihapus!<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+        <?php elseif (isset($_GET['msg']) && $_GET['msg'] === 'error'): ?>
+            <div class="alert alert-danger alert-dismissible fade show">Gagal menghapus data peserta.<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
+        <?php endif; ?>
+
         <!-- Header Ringkasan Sesi -->
         <div class="card shadow-sm border-0 mb-4 p-4">
             <div class="d-flex justify-content-between align-items-center">
@@ -81,14 +142,15 @@ $respondents = $stmt_respondents->fetchAll();
                             <th>Nama Peserta</th>
                             <th>Instansi / Sekolah</th>
                             <th>Level Selesai</th>
-                            <th>Fitur Dikuasai (Sudah)</th>
+                            <th>Fitur Dikuasai</th>
                             <th>Waktu Bergabung</th>
+                            <th class="text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($respondents)): ?>
                             <tr>
-                                <td colspan="6" class="text-center text-muted py-4">Belum ada peserta yang bergabung pada sesi PIN ini.</td>
+                                <td colspan="7" class="text-center text-muted py-4">Belum ada peserta yang bergabung pada sesi PIN ini.</td>
                             </tr>
                         <?php else: ?>
                             <?php foreach ($respondents as $idx => $r): ?>
@@ -101,6 +163,18 @@ $respondents = $stmt_respondents->fetchAll();
                                         <span class="badge bg-primary fs-6"><?= $r['total_sudah'] ?> Fitur</span>
                                     </td>
                                     <td><?= date('d M Y H:i', strtotime($r['created_at'])) ?></td>
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm">
+                                            <!-- Tombol Detail Jawaban (Modal) -->
+                                            <button type="button" class="btn btn-info text-white fw-bold" onclick="showAnswersModal(<?= $r['id'] ?>, '<?= htmlspecialchars(addslashes($r['name'])) ?>')">
+                                                Detail
+                                            </button>
+                                            <!-- Tombol Hapus Peserta -->
+                                            <button type="button" class="btn btn-danger fw-bold" onclick="confirmDelete(<?= $r['id'] ?>, '<?= htmlspecialchars(addslashes($r['name'])) ?>')">
+                                                Hapus
+                                            </button>
+                                        </div>
+                                    </td>
                                 </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -109,6 +183,111 @@ $respondents = $stmt_respondents->fetchAll();
             </div>
         </div>
     </div>
+
+    <!-- Modal Pop-Up Detail Pertanyaan & Jawaban Peserta -->
+    <div class="modal fade" id="answersModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <div>
+                        <h5 class="modal-title fw-bold" id="modalTitle">Detail Jawaban Peserta</h5>
+                        <small class="text-white-50" id="modalSubTitle">Kategori Instrumen: <?= str_replace('_', ' ', $session['instrument_type']) ?></small>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="modalLoading" class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="mt-2 text-muted">Memuat pertanyaan dan jawaban...</p>
+                    </div>
+                    <div class="table-responsive d-none" id="modalTableWrapper">
+                        <table class="table table-bordered table-striped align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 20%;">Level</th>
+                                    <th style="width: 65%;">Pertanyaan / Fitur Instrumen</th>
+                                    <th style="width: 15%;" class="text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modalAnswersBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const answersModal = new bootstrap.Modal(document.getElementById('answersModal'));
+
+        // Tampilkan Pop-Up Modal Detail Pertanyaan & Jawaban Peserta
+        function showAnswersModal(respondentId, respondentName) {
+            document.getElementById('modalTitle').textContent = `Detail Jawaban: ${respondentName}`;
+            document.getElementById('modalLoading').classList.remove('d-none');
+            document.getElementById('modalTableWrapper').classList.add('d-none');
+
+            answersModal.show();
+
+            fetch(`detail?session_id=<?= $session_id ?>&api=get_answers&respondent_id=${respondentId}`)
+                .then(res => res.json())
+                .then(data => {
+                    const tbody = document.getElementById('modalAnswersBody');
+                    tbody.innerHTML = '';
+
+                    if (data.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="3" class="text-center text-muted py-3">Tidak ada pertanyaan/jawaban untuk instrumen ini.</td></tr>';
+                    } else {
+                        data.forEach(item => {
+                            const badgeClass = item.status === 'Sudah' ? 'bg-success' : 'bg-danger';
+                            const practiceInfo = item.usage_practice ? `<br><small class="text-muted">Praktik: ${item.usage_practice}</small>` : '';
+
+                            const row = `
+                                <tr>
+                                    <td><span class="badge bg-secondary">${item.level_name}</span></td>
+                                    <td>
+                                        <strong>${item.feature_name}</strong>
+                                        ${practiceInfo}
+                                    </td>
+                                    <td class="text-center"><span class="badge ${badgeClass}">${item.status}</span></td>
+                                </tr>
+                            `;
+                            tbody.insertAdjacentHTML('beforeend', row);
+                        });
+                    }
+
+                    document.getElementById('modalLoading').classList.add('d-none');
+                    document.getElementById('modalTableWrapper').classList.remove('d-none');
+                })
+                .catch(err => {
+                    console.error('Error fetching answers:', err);
+                    document.getElementById('modalLoading').innerHTML = '<div class="alert alert-danger">Gagal memuat detail pertanyaan dan jawaban.</div>';
+                });
+        }
+
+        // Konfirmasi Hapus Peserta
+        function confirmDelete(respondentId, respondentName) {
+            Swal.fire({
+                title: 'Hapus Peserta?',
+                text: `Apakah Anda yakin ingin menghapus peserta "${respondentName}" beserta seluruh jawabannya?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `detail?session_id=<?= $session_id ?>&action=delete_respondent&respondent_id=${respondentId}`;
+                }
+            });
+        }
+    </script>
 </body>
 
 </html>

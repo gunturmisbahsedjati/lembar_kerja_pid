@@ -86,6 +86,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <title><?= htmlspecialchars($level_data['level_name']) ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Pustaka SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 
 <body class="bg-light p-4">
@@ -97,7 +99,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <p class="text-muted">Pilih "Sudah" jika Anda telah menguasai/menggunakan fitur berikut. Anda harus menjawab **Sudah** pada semua poin di level ini untuk dapat lanjut ke level berikutnya.</p>
         </div>
 
-        <form method="POST">
+        <form id="levelForm" method="POST">
             <?php foreach ($features as $idx => $f): ?>
                 <div class="card shadow-sm border-0 mb-3">
                     <div class="card-body">
@@ -123,9 +125,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             <?php endforeach; ?>
 
-            <button type="submit" class="btn btn-success btn-lg w-100 fw-bold my-4">Simpan & Lanjutkan</button>
+            <button type="button" id="btnSimpan" class="btn btn-success btn-lg w-100 fw-bold my-4">Simpan & Lanjutkan</button>
         </form>
     </div>
+
+    <script>
+        document.getElementById('btnSimpan').addEventListener('click', function() {
+            const form = document.getElementById('levelForm');
+
+            // Cek kelengkapan radio button (atribut required)
+            if (!form.checkValidity()) {
+                form.reportValidity();
+                return;
+            }
+
+            // Pop-up Konfirmasi SweetAlert2
+            Swal.fire({
+                title: 'Konfirmasi Simpan',
+                text: "Apakah Anda yakin ingin menyimpan jawaban ini?",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#198754',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Ya, Lanjutkan',
+                cancelButtonText: 'Batal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>

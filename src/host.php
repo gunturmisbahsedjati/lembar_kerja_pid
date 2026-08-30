@@ -158,7 +158,7 @@ $sessions = $pdo->query("
                                             <a href="host?toggle_id=<?= $s['id'] ?>" class="btn <?= $s['status'] === 'active' ? 'btn-outline-secondary' : 'btn-outline-success' ?>">
                                                 <?= $s['status'] === 'active' ? 'Nonaktifkan' : 'Aktifkan' ?>
                                             </a>
-                                            <a href="leaderboard?session_id=<?= $s['id'] ?>" class="btn btn-info text-white">Leaderboard</a>
+                                            <a href="leaderboard?session_id=<?= $s['id'] ?>" target="_blank" class="btn btn-info text-white">Leaderboard</a>
                                             <a href="host?delete_id=<?= $s['id'] ?>" class="btn btn-danger" onclick="return confirm('Hapus PIN <?= htmlspecialchars($s['pin']) ?>?');">Hapus</a>
                                         </div>
                                     </td>
