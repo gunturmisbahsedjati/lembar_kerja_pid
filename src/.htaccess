@@ -1,0 +1,13 @@
+RewriteEngine On
+
+# 1. Hentikan pemrosesan jika file atau direktori fisik memang ada
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# 2. Arahkan URL tanpa .php ke file .php yang sesuai secara internal
+RewriteCond %{REQUEST_FILENAME}.php -f
+RewriteRule ^([^\.]+)$ $1.php [NC,L]
+
+# 3. Redirect (301) jika user mengetikkan .php secara manual di URL ke versi tanpa .php
+RewriteCond %{THE_REQUEST} "^[A-Z]{3,9}\ /([^/]+/)*([^.\ ]+)\.php"
+RewriteRule ^ %1%2 [R=301,L]
