@@ -9,30 +9,39 @@ if (!$respondent_id) {
     exit;
 }
 
-// Ambil info Responden
-$stmt = $pdo->prepare("SELECT * FROM respondents WHERE id = ?");
+// Ambil info Responden & Tipe Instrumen Sesi
+$stmt = $pdo->prepare("
+    SELECT r.*, gs.instrument_type 
+    FROM respondents r 
+    JOIN game_sessions gs ON gs.id = r.session_id 
+    WHERE r.id = ?
+");
 $stmt->execute([$respondent_id]);
 $respondent = $stmt->fetch();
 
-// Verifikasi Level Progression
+if (!$respondent) {
+    header("Location: index");
+    exit;
+}
+
+// Verifikasi Progress Level
 if ($current_level_order > ($respondent['completed_level'] + 1)) {
     $allowed_level = $respondent['completed_level'] + 1;
     header("Location: play?respondent_id=$respondent_id&level=$allowed_level");
     exit;
 }
 
-// Ambil Data Level saat ini
-$stmt = $pdo->prepare("SELECT * FROM levels WHERE level_order = ?");
-$stmt->execute([$current_level_order]);
+// Ambil Data Level Berdasarkan Instrumen Sesi
+$stmt = $pdo->prepare("SELECT * FROM levels WHERE instrument_type = ? AND level_order = ?");
+$stmt->execute([$respondent['instrument_type'], $current_level_order]);
 $level_data = $stmt->fetch();
 
 if (!$level_data) {
-    // Jika semua level selesai
-    header("Location: leaderboard");
+    header("Location: leaderboard?session_id=" . $respondent['session_id']);
     exit;
 }
 
-// Ambil Pertanyaan/Fitur di Level ini
+// Ambil Pertanyaan di Level ini
 $stmt = $pdo->prepare("SELECT * FROM features WHERE level_id = ?");
 $stmt->execute([$level_data['id']]);
 $features = $stmt->fetchAll();
@@ -45,7 +54,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     foreach ($features as $f) {
         $status = $answers[$f['id']] ?? 'Belum';
 
-        // Simpan atau update jawaban
         $stmt_ans = $pdo->prepare("INSERT INTO answers (respondent_id, feature_id, status) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE status = ?");
         $stmt_ans->execute([$respondent_id, $f['id'], $status, $status]);
 
@@ -54,21 +62,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Jika SEMUA fitur di level ini "Sudah", tingkatkan completed_level peserta
     if ($all_sudah && $respondent['completed_level'] < $current_level_order) {
         $stmt_up = $pdo->prepare("UPDATE respondents SET completed_level = ? WHERE id = ?");
         $stmt_up->execute([$current_level_order, $respondent_id]);
     }
 
-    // Cek Level Selanjutnya
     $next_level = $current_level_order + 1;
-    $stmt_next = $pdo->prepare("SELECT * FROM levels WHERE level_order = ?");
-    $stmt_next->execute([$next_level]);
+    $stmt_next = $pdo->prepare("SELECT * FROM levels WHERE instrument_type = ? AND level_order = ?");
+    $stmt_next->execute([$respondent['instrument_type'], $next_level]);
 
     if ($all_sudah && $stmt_next->fetch()) {
         header("Location: play?respondent_id=$respondent_id&level=$next_level");
     } else {
-        header("Location: leaderboard");
+        header("Location: leaderboard?session_id=" . $respondent['session_id']);
     }
     exit;
 }
@@ -85,7 +91,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body class="bg-light p-4">
     <div class="container" style="max-width: 800px;">
         <div class="card shadow border-0 p-4 mb-4">
-            <h4 class="text-secondary mb-1">Peserta: <strong><?= htmlspecialchars($respondent['name']) ?></strong> (<?= htmlspecialchars($respondent['institution']) ?>)</h4>
+            <h5 class="text-secondary mb-1">Peserta: <strong><?= htmlspecialchars($respondent['name']) ?></strong> (<?= htmlspecialchars($respondent['institution']) ?>)</h5>
+            <span class="badge bg-primary w-auto mb-2" style="width: fit-content;">Instrumen: <?= str_replace('_', ' ', $respondent['instrument_type']) ?></span>
             <h2 class="fw-bold text-primary"><?= htmlspecialchars($level_data['level_name']) ?></h2>
             <p class="text-muted">Pilih "Sudah" jika Anda telah menguasai/menggunakan fitur berikut. Anda harus menjawab **Sudah** pada semua poin di level ini untuk dapat lanjut ke level berikutnya.</p>
         </div>
@@ -95,8 +102,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="card shadow-sm border-0 mb-3">
                     <div class="card-body">
                         <h5 class="fw-bold text-dark"><?= ($idx + 1) ?>. <?= htmlspecialchars($f['feature_name']) ?></h5>
-                        <p class="mb-1"><strong>Praktik Penggunaan:</strong> <?= htmlspecialchars($f['usage_practice']) ?></p>
-                        <p class="text-muted"><strong>Contoh Pemanfaatan:</strong> <?= htmlspecialchars($f['example_usage']) ?></p>
+                        <?php if ($f['usage_practice']): ?>
+                            <p class="mb-1"><strong>Kategori / Praktik:</strong> <?= htmlspecialchars($f['usage_practice']) ?></p>
+                        <?php endif; ?>
+                        <?php if ($f['example_usage']): ?>
+                            <p class="text-muted"><strong><?= $respondent['instrument_type'] == 'PAUD_SD_SMP_SLB_PKBM' ? 'Contoh : ' : 'Keterangan : ' ?></strong> <?= htmlspecialchars($f['example_usage']) ?></p>
+                        <?php endif; ?>
 
                         <div class="mt-3">
                             <div class="form-check form-check-inline">
