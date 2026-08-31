@@ -93,7 +93,7 @@ foreach ($raw_details as $row) {
         .check-box-cell {
             text-align: center;
             width: 80px;
-            font-size: 10pt;
+            font-size: 11pt;
             font-weight: bold;
         }
 
