@@ -181,6 +181,7 @@ $stmt_respondents = $pdo->prepare("
 ");
 $stmt_respondents->execute([$session_id]);
 $respondents = $stmt_respondents->fetchAll();
+$no = 1;
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -188,11 +189,33 @@ $respondents = $stmt_respondents->fetchAll();
 <head>
     <meta charset="UTF-8">
     <title>Detail Responden - PIN <?= htmlspecialchars($session['pin']) ?></title>
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- DataTables CSS untuk Bootstrap 5 -->
+    <link href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/fixedheader/3.4.0/css/fixedHeader.bootstrap5.min.css" rel="stylesheet">
+
     <!-- Pustaka SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="icon" type="image/x-icon" href="logo.png" />
     <link rel="apple-touch-icon" href="logo.png">
+
+    <style>
+        /* Penyesuaian tampilan DataTables agar selaras dengan tema Bootstrap */
+        .dataTables_wrapper .dataTables_paginate .paginate_button {
+            padding: 0;
+        }
+
+        div.dataTables_wrapper div.dataTables_filter {
+            margin-bottom: 15px;
+        }
+
+        table.dataTable thead tr th {
+            background-color: #212529 !important;
+            color: #ffffff !important;
+        }
+    </style>
 </head>
 
 <body class="bg-light">
@@ -220,7 +243,7 @@ $respondents = $stmt_respondents->fetchAll();
         </div>
 
         <!-- Tabel Daftar Responden -->
-        <div class="card shadow-sm border-0 p-4">
+        <div class="card shadow-sm border-0 p-4 mb-5">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h4 class="fw-bold text-dark mb-0">Daftar Peserta (<?= count($respondents) ?>)</h4>
                 <div>
@@ -233,49 +256,43 @@ $respondents = $stmt_respondents->fetchAll();
             </div>
 
             <div class="table-responsive">
-                <table class="table table-hover align-middle">
+                <table id="detailTable" class="table table-hover align-middle w-100">
                     <thead class="table-dark">
                         <tr>
-                            <th>No</th>
+                            <th>No.</th>
                             <th>Nama Peserta</th>
                             <th>Instansi / Sekolah</th>
                             <th>Level Selesai</th>
                             <th>Fitur Dikuasai</th>
                             <th>Waktu Bergabung</th>
-                            <th class="text-center">Aksi</th>
+                            <th class="text-center" data-orderable="false">Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if (empty($respondents)): ?>
+                        <?php foreach ($respondents as $r): ?>
                             <tr>
-                                <td colspan="7" class="text-center text-muted py-4">Belum ada peserta yang bergabung pada sesi PIN ini.</td>
+                                <td><?= $no++ ?></td>
+                                <td><strong><?= htmlspecialchars($r['name']) ?></strong></td>
+                                <td><?= htmlspecialchars($r['institution']) ?></td>
+                                <td><span class="badge bg-success fs-6">Level <?= $r['completed_level'] ?></span></td>
+                                <td>
+                                    <span class="badge bg-primary fs-6"><?= $r['total_sudah'] ?> Fitur</span>
+                                </td>
+                                <td><?= date('d M Y H:i', strtotime($r['created_at'])) ?></td>
+                                <td class="text-center text-nowrap">
+                                    <div class="btn-group btn-group-sm">
+                                        <!-- Tombol Detail Jawaban (Modal) -->
+                                        <button type="button" class="btn btn-info text-white fw-bold" onclick="showAnswersModal(<?= $r['id'] ?>, '<?= htmlspecialchars(addslashes($r['name'])) ?>')">
+                                            Detail
+                                        </button>
+                                        <!-- Tombol Hapus Peserta -->
+                                        <button type="button" class="btn btn-danger fw-bold" onclick="confirmDelete(<?= $r['id'] ?>, '<?= htmlspecialchars(addslashes($r['name'])) ?>')">
+                                            Hapus
+                                        </button>
+                                    </div>
+                                </td>
                             </tr>
-                        <?php else: ?>
-                            <?php foreach ($respondents as $idx => $r): ?>
-                                <tr>
-                                    <td><?= $idx + 1 ?></td>
-                                    <td><strong><?= htmlspecialchars($r['name']) ?></strong></td>
-                                    <td><?= htmlspecialchars($r['institution']) ?></td>
-                                    <td><span class="badge bg-success fs-6">Level <?= $r['completed_level'] ?></span></td>
-                                    <td>
-                                        <span class="badge bg-primary fs-6"><?= $r['total_sudah'] ?> Fitur</span>
-                                    </td>
-                                    <td><?= date('d M Y H:i', strtotime($r['created_at'])) ?></td>
-                                    <td class="text-center">
-                                        <div class="btn-group btn-group-sm">
-                                            <!-- Tombol Detail Jawaban (Modal) -->
-                                            <button type="button" class="btn btn-info text-white fw-bold" onclick="showAnswersModal(<?= $r['id'] ?>, '<?= htmlspecialchars(addslashes($r['name'])) ?>')">
-                                                Detail
-                                            </button>
-                                            <!-- Tombol Hapus Peserta -->
-                                            <button type="button" class="btn btn-danger fw-bold" onclick="confirmDelete(<?= $r['id'] ?>, '<?= htmlspecialchars(addslashes($r['name'])) ?>')">
-                                                Hapus
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
+                        <?php endforeach; ?>
                     </tbody>
                 </table>
             </div>
@@ -283,7 +300,7 @@ $respondents = $stmt_respondents->fetchAll();
     </div>
 
     <!-- Modal Pop-Up Detail Pertanyaan & Jawaban Peserta -->
-    <div class="modal fade" id="answersModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" data-bs-backdrop="static" id="answersModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
@@ -318,10 +335,40 @@ $respondents = $stmt_respondents->fetchAll();
         </div>
     </div>
 
+    <!-- Scripts JavaScript -->
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- DataTables JS & FixedHeader -->
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/fixedheader/3.4.0/js/dataTables.fixedHeader.min.js"></script>
 
     <script>
         const answersModal = new bootstrap.Modal(document.getElementById('answersModal'));
+
+        $(document).ready(function() {
+            // Inisialisasi DataTables dengan Bahasa Indonesia & Header Static
+            var table = $('#detailTable').DataTable({
+                fixedHeader: true,
+                pageLength: 10,
+                lengthMenu: [5, 10, 25, 50, 100],
+                language: {
+                    search: "Cari Peserta:",
+                    lengthMenu: "Tampilkan _MENU_ data per halaman",
+                    zeroRecords: "Peserta tidak ditemukan",
+                    info: "Menampilkan halaman _PAGE_ dari _PAGES_",
+                    infoEmpty: "Tidak ada data peserta",
+                    infoFiltered: "(difilter dari _MAX_ total peserta)",
+                    paginate: {
+                        first: "Pertama",
+                        last: "Terakhir",
+                        next: "Lanjut",
+                        previous: "Kembali"
+                    }
+                }
+            });
+        });
 
         // Konfigurasi dasar SweetAlert2 Toast
         const Toast = Swal.mixin({

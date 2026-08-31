@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Masuk Eksplorasi PID</title>
+    <title>Lembar Kerja PID | BBPMP Provinsi Jawa Timur</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="logo.png" />
     <link rel="apple-touch-icon" href="logo.png">
@@ -96,6 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
     <div class="container" style="max-width: 450px;">
         <div class="card glass-card border-0 p-4">
+            <img src="logo.png" alt="Logo" class="mx-auto d-block mb-3" style="width: 100px;">
             <h3 class="fw-bold text-center mb-1" style="color: #4a00e0;">LEMBAR KERJA PESERTA</h3>
             <p class="text-center text-muted mb-4">PEMANFAATAN FITUR PAPAN INTERAKTIF DIGITAL</p>
 
