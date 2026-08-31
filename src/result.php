@@ -275,7 +275,7 @@ $overall_percentage = $grand_total_features > 0
             </div>
 
             <!-- Tombol Selesai -->
-            <a href="index" class="btn btn-light btn-lg fw-bold shadow">
+            <a href="/" class="btn btn-light btn-lg fw-bold shadow">
                 🏠 Selesai & Kembali
             </a>
         </div>

@@ -54,7 +54,7 @@ foreach ($raw_details as $row) {
 
 <head>
     <meta charset="UTF-8">
-    <title>Lembar Ceklis SAMR - <?= htmlspecialchars($respondent['name']) ?></title>
+    <title>Lembar Kerja Peserta - <?= htmlspecialchars($respondent['name']) ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
