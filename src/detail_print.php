@@ -69,6 +69,7 @@ foreach ($raw_details as $row) {
             text-align: center;
             font-weight: bold;
             text-transform: uppercase;
+            margin-top: -20px;
         }
 
         .table-ceklis {
@@ -92,10 +93,11 @@ foreach ($raw_details as $row) {
         .check-box-cell {
             text-align: center;
             width: 80px;
-            font-size: 12pt;
+            font-size: 10pt;
             font-weight: bold;
         }
 
+        /* NOMOR HALAMAN KHUSUS CETAK */
         @media print {
             .no-print {
                 display: none !important;
@@ -103,7 +105,23 @@ foreach ($raw_details as $row) {
 
             @page {
                 size: A4;
-                margin: 0.8cm;
+                margin: 1cm 1cm 1.5cm 1cm;
+
+                /* Menampilkan nomor halaman di pojok kanan bawah */
+                @bottom-right {
+                    content: "Halaman " counter(page) " dari " counter(pages);
+                    font-family: Arial, sans-serif;
+                    font-size: 9pt;
+                    color: #555;
+                }
+
+                /* Menampilkan footer identitas di pojok kiri bawah */
+                @bottom-left {
+                    content: "BBPMP Provinsi Jawa Timur";
+                    font-family: Arial, sans-serif;
+                    font-size: 9pt;
+                    color: #555;
+                }
             }
 
             body {
@@ -129,16 +147,15 @@ foreach ($raw_details as $row) {
         <!-- Header Dokumen SAMR -->
         <div class="header-title mb-3">
             <h5 class="fw-bold mb-0">LEMBAR KERJA PESERTA</h5>
-            <div class="fw-bold">EKSPLORASI PEMANFAATAN FITUR PAPAN INTERAKTIF DIGITAL (PID)<br>BBPMP Provinsi Jawa Timur</div>
+            <h5 class="fw-bold">EKSPLORASI PEMANFAATAN FITUR PAPAN INTERAKTIF DIGITAL</h5>
         </div>
 
         <!-- Identitas Peserta -->
-        <table class=" mb-3" style="border: 0px;">
-
+        <table class="mb-3" style="border: 0px;">
             <tr>
                 <td><strong>Nama</strong></td>
                 <td style="padding-left: 0.5em;padding-right: 0.5em;">:</td>
-                <td width=""><?= htmlspecialchars($respondent['name']) ?></td>
+                <td><?= htmlspecialchars($respondent['name']) ?></td>
             </tr>
             <tr>
                 <td><strong>Instansi/Sekolah</strong></td>
@@ -151,23 +168,23 @@ foreach ($raw_details as $row) {
                 <td><?= htmlspecialchars(str_replace('_', ' ', $respondent['instrument_type'])) ?></td>
             </tr>
             <tr>
-                <td width=""><strong>Kelompok / Sesi</strong></td>
+                <td><strong>Kelompok / Sesi</strong></td>
                 <td style="padding-left: 0.5em;padding-right: 0.5em;">:</td>
-                <td width=""><?= htmlspecialchars($respondent['session_name']) ?></td>
+                <td><?= htmlspecialchars($respondent['session_name']) ?></td>
             </tr>
             <tr>
-                <td width=""><strong>Waktu Pengisian</strong></td>
+                <td><strong>Waktu Pengisian</strong></td>
                 <td style="padding-left: 0.5em;padding-right: 0.5em;">:</td>
-                <td width=""><?= Indonesia2Tgl($respondent['created_at']) ?></td>
+                <td><?= Indonesia2Tgl($respondent['created_at']) ?></td>
             </tr>
         </table>
 
-        <!-- Loop Per Level (Berurut Kebawah 1 Kolom Penuh) -->
+        <!-- Loop Per Level -->
         <?php foreach ($grouped_data as $level_name => $features): ?>
             <table class="table-ceklis">
                 <thead>
                     <tr class="bg-level-header">
-                        <th colspan="3" class="text-start fs-6 p-2"><?= htmlspecialchars($level_name) ?></th>
+                        <th colspan="3" style="border: 0px;" class="text-start fs-6 p-2"><?= htmlspecialchars($level_name) ?></th>
                     </tr>
                     <tr class="bg-light text-center fw-bold">
                         <th width="5%">No</th>
@@ -188,14 +205,6 @@ foreach ($raw_details as $row) {
                 </tbody>
             </table>
         <?php endforeach; ?>
-
-        <!-- Footer / Petunjuk Pengisian -->
-        <div class="mt-2 small">
-            <strong>Petunjuk pengisian:</strong> Beri tanda centang (✓) pada kotak jika Anda SUDAH BISA melakukan kemampuan tersebut. Biarkan kosong jika belum.
-        </div>
-        <!-- <div class="text-end fw-bold mt-1 small text-muted">
-            BBPMP Provinsi Jawa Timur <?= date('Y') ?>
-        </div> -->
     </div>
 
     <script>

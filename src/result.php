@@ -252,15 +252,29 @@ $overall_percentage = $grand_total_features > 0
 
         <!-- Tombol Aksi -->
         <div class="text-center mb-4 no-print d-flex justify-content-center gap-2 flex-wrap">
-            <button id="pdfBtn" onclick="downloadPDF()" class="btn btn-danger btn-lg fw-bold shadow">
-                <i class="bi bi-file-earmark-pdf-fill me-1"></i> Cetak PDF
-            </button>
+            <!-- Dropdown Cetak -->
+            <div class="dropdown">
+                <button class="btn btn-danger btn-lg fw-bold dropdown-toggle shadow" type="button" id="dropdownMenuCetak" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="bi bi-printer-fill me-1"></i> Cetak Dokumen
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0" aria-labelledby="dropdownMenuCetak">
+                    <li>
+                        <button id="pdfBtn" onclick="downloadPDF()" class="dropdown-item py-2 fw-semibold">
+                            <i class="bi bi-file-earmark-pdf-fill text-danger me-2"></i> Cetak Ringkasan (PDF)
+                        </button>
+                    </li>
+                    <li>
+                        <hr class="dropdown-divider">
+                    </li>
+                    <li>
+                        <a href="detail_print?respondent_id=<?= urlencode($respondent['id']) ?>" target="_blank" class="dropdown-item py-2 fw-semibold">
+                            <i class="bi bi-card-checklist text-primary me-2"></i> Cetak Detail per Pertanyaan
+                        </a>
+                    </li>
+                </ul>
+            </div>
 
-            <!-- TOMBOL BARU DITAMBAHKAN -->
-            <a href="detail_print?respondent_id=<?= urlencode($respondent['id']) ?>" target="_blank" class="btn btn-info text-white btn-lg fw-bold shadow">
-                <i class="bi bi-printer-fill me-1"></i> Cetak Detail per Pertanyaan
-            </a>
-
+            <!-- Tombol Selesai -->
             <a href="index" class="btn btn-light btn-lg fw-bold shadow">
                 🏠 Selesai & Kembali
             </a>
@@ -274,7 +288,7 @@ $overall_percentage = $grand_total_features > 0
             <p>We're sorry but this apps doesn't work properly without JavaScript enabled. Please enable it to continue.</p>
         </div>
     </noscript>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
         function downloadPDF() {
             const element = document.getElementById('printArea');
