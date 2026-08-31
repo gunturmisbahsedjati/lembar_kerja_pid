@@ -118,7 +118,6 @@ $no = 1;
         <div class="d-flex align-items-center gap-3">
             <span class="text-white">Halo, <strong><?= htmlspecialchars($_SESSION['host_name']) ?></strong></span>
             <a href="/" target="_blank" class="btn btn-success text-white btn-sm">Link Form</a>
-            <a href="qrcode" target="_blank" class="btn btn-info text-white btn-sm">Link QR</a>
             <a href="host?action=logout" class="btn btn-outline-danger btn-sm">Logout</a>
         </div>
     </nav>
