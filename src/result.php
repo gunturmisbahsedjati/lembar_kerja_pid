@@ -255,6 +255,12 @@ $overall_percentage = $grand_total_features > 0
             <button id="pdfBtn" onclick="downloadPDF()" class="btn btn-danger btn-lg fw-bold shadow">
                 <i class="bi bi-file-earmark-pdf-fill me-1"></i> Cetak PDF
             </button>
+
+            <!-- TOMBOL BARU DITAMBAHKAN -->
+            <a href="detail_print?respondent_id=<?= urlencode($respondent['id']) ?>" target="_blank" class="btn btn-info text-white btn-lg fw-bold shadow">
+                <i class="bi bi-printer-fill me-1"></i> Cetak Detail per Pertanyaan
+            </a>
+
             <a href="index" class="btn btn-light btn-lg fw-bold shadow">
                 🏠 Selesai & Kembali
             </a>
