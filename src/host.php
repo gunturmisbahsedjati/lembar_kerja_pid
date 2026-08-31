@@ -158,6 +158,11 @@ $sessions = $pdo->query("
                                                 Detail
                                             </a>
 
+                                            <!-- Tombol Buka QR Code spesifik PIN -->
+                                            <a href="qrcode?pin=<?= urlencode($s['pin']) ?>" target="_blank" class="btn btn-dark">
+                                                QR Code
+                                            </a>
+
                                             <a href="host?toggle_id=<?= $s['id'] ?>" class="btn <?= $s['status'] === 'active' ? 'btn-outline-secondary' : 'btn-outline-success' ?>">
                                                 <?= $s['status'] === 'active' ? 'Nonaktifkan' : 'Aktifkan' ?>
                                             </a>
