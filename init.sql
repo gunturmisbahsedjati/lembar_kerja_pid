@@ -1,167 +1,1248 @@
-CREATE DATABASE IF NOT EXISTS quizizz_db;
-USE quizizz_db;
+-- phpMyAdmin SQL Dump
+-- version 5.2.3
+-- https://www.phpmyadmin.net/
+--
+-- Host: db
+-- Generation Time: Aug 31, 2026 at 02:45 PM
+-- Server version: 8.0.46
+-- PHP Version: 8.3.26
 
--- Tabel Users untuk Login Host
-CREATE TABLE IF NOT EXISTS users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(100) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    name VARCHAR(100) NOT NULL
-);
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
 
-INSERT INTO users (username, password, name) VALUES
-('admin', '$2y$10$e0MYzXyjpJS7Pd0RVvHwHe1g.9y.4FjKmgG89J2l9sOdB8P8/nF1a', 'Administrator/Pengajar')
-ON DUPLICATE KEY UPDATE password = VALUES(password);
 
--- Tabel Level
-CREATE TABLE IF NOT EXISTS levels (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    instrument_type ENUM('PAUD_SD_SMP_SLB_PKBM', 'SMA_SMK') NOT NULL,
-    level_name VARCHAR(100) NOT NULL,
-    level_order INT NOT NULL
-);
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
 
--- Tabel Fitur / Pertanyaan per Level
-CREATE TABLE IF NOT EXISTS features (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    level_id INT NOT NULL,
-    feature_name VARCHAR(255) NOT NULL,
-    usage_practice TEXT NULL,
-    example_usage TEXT NULL,
-    FOREIGN KEY (level_id) REFERENCES levels(id) ON DELETE CASCADE
-);
+--
+-- Database: `quizizz_db`
+--
 
--- Tabel Sesi Game / PIN Key
-CREATE TABLE IF NOT EXISTS game_sessions (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    pin VARCHAR(10) NOT NULL UNIQUE,
-    session_name VARCHAR(255) NOT NULL,
-    instrument_type ENUM('PAUD_SD_SMP_SLB_PKBM', 'SMA_SMK') NOT NULL DEFAULT 'PAUD_SD_SMP_SLB_PKBM',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    status ENUM('active', 'inactive') DEFAULT 'active'
-);
+-- --------------------------------------------------------
 
--- Tabel Responden / Peserta
-CREATE TABLE IF NOT EXISTS respondents (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    session_id INT NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    institution VARCHAR(255) NOT NULL,
-    completed_level INT DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (session_id) REFERENCES game_sessions(id) ON DELETE CASCADE
-);
+--
+-- Table structure for table `answers`
+--
 
--- Tabel Jawaban
-CREATE TABLE IF NOT EXISTS answers (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    respondent_id INT NOT NULL,
-    feature_id INT NOT NULL,
-    status ENUM('Sudah', 'Belum') NOT NULL,
-    FOREIGN KEY (respondent_id) REFERENCES respondents(id) ON DELETE CASCADE,
-    FOREIGN KEY (feature_id) REFERENCES features(id) ON DELETE CASCADE
-);
+CREATE TABLE `answers` (
+  `id` int NOT NULL,
+  `respondent_id` varchar(50) NOT NULL,
+  `feature_id` int NOT NULL,
+  `status` enum('Sudah','Belum') NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- ========================================================
--- 1. DATA INSTRUMEN PAUD_SD_SMP_SLB_PKBM
--- ========================================================
-INSERT INTO levels (id, instrument_type, level_name, level_order) VALUES
+--
+-- Dumping data for table `answers`
+--
+
+INSERT INTO `answers` (`id`, `respondent_id`, `feature_id`, `status`) VALUES
+(1, '1', 24, 'Sudah'),
+(2, '1', 25, 'Sudah'),
+(3, '1', 26, 'Sudah'),
+(4, '1', 27, 'Sudah'),
+(5, '1', 28, 'Sudah'),
+(6, '1', 29, 'Sudah'),
+(7, '1', 30, 'Sudah'),
+(8, '1', 31, 'Sudah'),
+(25, '10', 24, 'Sudah'),
+(26, '10', 25, 'Sudah'),
+(27, '10', 26, 'Sudah'),
+(28, '10', 27, 'Sudah'),
+(29, '10', 28, 'Sudah'),
+(30, '10', 29, 'Sudah'),
+(31, '10', 30, 'Sudah'),
+(32, '10', 31, 'Sudah'),
+(33, '10', 32, 'Sudah'),
+(34, '10', 33, 'Sudah'),
+(35, '10', 34, 'Sudah'),
+(36, '10', 35, 'Sudah'),
+(37, '10', 36, 'Sudah'),
+(38, '10', 37, 'Sudah'),
+(39, '10', 38, 'Sudah'),
+(40, '10', 39, 'Sudah'),
+(41, '10', 40, 'Sudah'),
+(42, '10', 41, 'Sudah'),
+(43, '10', 42, 'Sudah'),
+(44, '10', 43, 'Sudah'),
+(45, '10', 44, 'Sudah'),
+(46, '10', 45, 'Sudah'),
+(47, '10', 46, 'Sudah'),
+(48, '10', 47, 'Sudah'),
+(49, '10', 48, 'Sudah'),
+(50, '10', 49, 'Sudah'),
+(51, '10', 50, 'Sudah'),
+(52, '10', 51, 'Sudah'),
+(53, '10', 52, 'Sudah'),
+(54, '10', 53, 'Sudah'),
+(55, '10', 54, 'Sudah'),
+(56, '10', 55, 'Sudah'),
+(57, '10', 56, 'Sudah'),
+(58, '10', 57, 'Sudah'),
+(59, '10', 58, 'Sudah'),
+(60, '10', 59, 'Sudah'),
+(61, '10', 60, 'Sudah'),
+(62, '10', 61, 'Sudah'),
+(63, '10', 62, 'Sudah'),
+(64, '10', 63, 'Sudah'),
+(65, '10', 64, 'Sudah'),
+(66, '12', 24, 'Belum'),
+(67, '12', 25, 'Sudah'),
+(68, '12', 26, 'Sudah'),
+(69, '12', 27, 'Sudah'),
+(70, '12', 28, 'Sudah'),
+(71, '12', 29, 'Sudah'),
+(72, '12', 30, 'Sudah'),
+(73, '12', 31, 'Sudah'),
+(74, '12', 32, 'Belum'),
+(75, '12', 33, 'Belum'),
+(76, '12', 34, 'Sudah'),
+(77, '12', 35, 'Sudah'),
+(78, '12', 36, 'Sudah'),
+(79, '12', 37, 'Belum'),
+(80, '12', 38, 'Belum'),
+(81, '12', 39, 'Sudah'),
+(82, '12', 40, 'Sudah'),
+(83, '12', 41, 'Sudah'),
+(84, '1', 24, 'Sudah'),
+(85, '10', 24, 'Belum'),
+(86, '12', 24, 'Belum'),
+(87, '14', 24, 'Belum'),
+(88, '15', 24, 'Sudah'),
+(89, '16', 24, 'Belum'),
+(90, '17', 24, 'Belum'),
+(91, '18', 24, 'Sudah'),
+(92, '19', 24, 'Belum'),
+(93, '20', 24, 'Belum'),
+(94, '21', 24, 'Sudah'),
+(95, '22', 24, 'Sudah'),
+(96, '23', 24, 'Sudah'),
+(97, '1', 25, 'Sudah'),
+(98, '10', 25, 'Sudah'),
+(99, '12', 25, 'Sudah'),
+(100, '14', 25, 'Sudah'),
+(101, '15', 25, 'Belum'),
+(102, '16', 25, 'Sudah'),
+(103, '17', 25, 'Belum'),
+(104, '18', 25, 'Sudah'),
+(105, '19', 25, 'Belum'),
+(106, '20', 25, 'Belum'),
+(107, '21', 25, 'Sudah'),
+(108, '22', 25, 'Belum'),
+(109, '23', 25, 'Belum'),
+(110, '1', 26, 'Sudah'),
+(111, '10', 26, 'Sudah'),
+(112, '12', 26, 'Belum'),
+(113, '14', 26, 'Sudah'),
+(114, '15', 26, 'Sudah'),
+(115, '16', 26, 'Sudah'),
+(116, '17', 26, 'Sudah'),
+(117, '18', 26, 'Sudah'),
+(118, '19', 26, 'Belum'),
+(119, '20', 26, 'Sudah'),
+(120, '21', 26, 'Belum'),
+(121, '22', 26, 'Sudah'),
+(122, '23', 26, 'Sudah'),
+(123, '1', 27, 'Sudah'),
+(124, '10', 27, 'Belum'),
+(125, '12', 27, 'Sudah'),
+(126, '14', 27, 'Belum'),
+(127, '15', 27, 'Sudah'),
+(128, '16', 27, 'Sudah'),
+(129, '17', 27, 'Sudah'),
+(130, '18', 27, 'Sudah'),
+(131, '19', 27, 'Belum'),
+(132, '20', 27, 'Sudah'),
+(133, '21', 27, 'Belum'),
+(134, '22', 27, 'Belum'),
+(135, '23', 27, 'Belum'),
+(136, '1', 28, 'Sudah'),
+(137, '10', 28, 'Sudah'),
+(138, '12', 28, 'Belum'),
+(139, '14', 28, 'Belum'),
+(140, '15', 28, 'Sudah'),
+(141, '16', 28, 'Belum'),
+(142, '17', 28, 'Belum'),
+(143, '18', 28, 'Sudah'),
+(144, '19', 28, 'Sudah'),
+(145, '20', 28, 'Sudah'),
+(146, '21', 28, 'Sudah'),
+(147, '22', 28, 'Sudah'),
+(148, '23', 28, 'Sudah'),
+(149, '1', 29, 'Sudah'),
+(150, '10', 29, 'Sudah'),
+(151, '12', 29, 'Sudah'),
+(152, '14', 29, 'Sudah'),
+(153, '15', 29, 'Sudah'),
+(154, '16', 29, 'Sudah'),
+(155, '17', 29, 'Sudah'),
+(156, '18', 29, 'Belum'),
+(157, '19', 29, 'Belum'),
+(158, '20', 29, 'Sudah'),
+(159, '21', 29, 'Sudah'),
+(160, '22', 29, 'Sudah'),
+(161, '23', 29, 'Belum'),
+(162, '1', 30, 'Sudah'),
+(163, '10', 30, 'Sudah'),
+(164, '12', 30, 'Belum'),
+(165, '14', 30, 'Sudah'),
+(166, '15', 30, 'Belum'),
+(167, '16', 30, 'Sudah'),
+(168, '17', 30, 'Sudah'),
+(169, '18', 30, 'Belum'),
+(170, '19', 30, 'Belum'),
+(171, '20', 30, 'Belum'),
+(172, '21', 30, 'Belum'),
+(173, '22', 30, 'Belum'),
+(174, '23', 30, 'Belum'),
+(175, '1', 31, 'Belum'),
+(176, '10', 31, 'Sudah'),
+(177, '12', 31, 'Sudah'),
+(178, '14', 31, 'Sudah'),
+(179, '15', 31, 'Sudah'),
+(180, '16', 31, 'Belum'),
+(181, '17', 31, 'Sudah'),
+(182, '18', 31, 'Sudah'),
+(183, '19', 31, 'Belum'),
+(184, '20', 31, 'Belum'),
+(185, '21', 31, 'Sudah'),
+(186, '22', 31, 'Belum'),
+(187, '23', 31, 'Sudah'),
+(188, '1', 32, 'Belum'),
+(189, '10', 32, 'Sudah'),
+(190, '12', 32, 'Sudah'),
+(191, '14', 32, 'Sudah'),
+(192, '15', 32, 'Sudah'),
+(193, '16', 32, 'Sudah'),
+(194, '17', 32, 'Belum'),
+(195, '18', 32, 'Belum'),
+(196, '19', 32, 'Belum'),
+(197, '20', 32, 'Belum'),
+(198, '21', 32, 'Belum'),
+(199, '22', 32, 'Sudah'),
+(200, '23', 32, 'Belum'),
+(201, '1', 33, 'Sudah'),
+(202, '10', 33, 'Sudah'),
+(203, '12', 33, 'Sudah'),
+(204, '14', 33, 'Belum'),
+(205, '15', 33, 'Sudah'),
+(206, '16', 33, 'Sudah'),
+(207, '17', 33, 'Sudah'),
+(208, '18', 33, 'Sudah'),
+(209, '19', 33, 'Sudah'),
+(210, '20', 33, 'Sudah'),
+(211, '21', 33, 'Belum'),
+(212, '22', 33, 'Sudah'),
+(213, '23', 33, 'Sudah'),
+(214, '1', 34, 'Sudah'),
+(215, '10', 34, 'Belum'),
+(216, '12', 34, 'Belum'),
+(217, '14', 34, 'Belum'),
+(218, '15', 34, 'Belum'),
+(219, '16', 34, 'Sudah'),
+(220, '17', 34, 'Sudah'),
+(221, '18', 34, 'Belum'),
+(222, '19', 34, 'Belum'),
+(223, '20', 34, 'Sudah'),
+(224, '21', 34, 'Belum'),
+(225, '22', 34, 'Belum'),
+(226, '23', 34, 'Sudah'),
+(227, '1', 35, 'Belum'),
+(228, '10', 35, 'Sudah'),
+(229, '12', 35, 'Sudah'),
+(230, '14', 35, 'Belum'),
+(231, '15', 35, 'Belum'),
+(232, '16', 35, 'Belum'),
+(233, '17', 35, 'Belum'),
+(234, '18', 35, 'Sudah'),
+(235, '19', 35, 'Sudah'),
+(236, '20', 35, 'Belum'),
+(237, '21', 35, 'Belum'),
+(238, '22', 35, 'Belum'),
+(239, '23', 35, 'Sudah'),
+(240, '1', 36, 'Belum'),
+(241, '10', 36, 'Sudah'),
+(242, '12', 36, 'Sudah'),
+(243, '14', 36, 'Sudah'),
+(244, '15', 36, 'Sudah'),
+(245, '16', 36, 'Sudah'),
+(246, '17', 36, 'Belum'),
+(247, '18', 36, 'Sudah'),
+(248, '19', 36, 'Sudah'),
+(249, '20', 36, 'Sudah'),
+(250, '21', 36, 'Sudah'),
+(251, '22', 36, 'Belum'),
+(252, '23', 36, 'Belum'),
+(253, '1', 37, 'Belum'),
+(254, '10', 37, 'Sudah'),
+(255, '12', 37, 'Sudah'),
+(256, '14', 37, 'Sudah'),
+(257, '15', 37, 'Sudah'),
+(258, '16', 37, 'Belum'),
+(259, '17', 37, 'Belum'),
+(260, '18', 37, 'Belum'),
+(261, '19', 37, 'Belum'),
+(262, '20', 37, 'Belum'),
+(263, '21', 37, 'Sudah'),
+(264, '22', 37, 'Sudah'),
+(265, '23', 37, 'Sudah'),
+(266, '1', 38, 'Sudah'),
+(267, '10', 38, 'Belum'),
+(268, '12', 38, 'Belum'),
+(269, '14', 38, 'Belum'),
+(270, '15', 38, 'Belum'),
+(271, '16', 38, 'Sudah'),
+(272, '17', 38, 'Sudah'),
+(273, '18', 38, 'Belum'),
+(274, '19', 38, 'Belum'),
+(275, '20', 38, 'Sudah'),
+(276, '21', 38, 'Belum'),
+(277, '22', 38, 'Sudah'),
+(278, '23', 38, 'Sudah'),
+(279, '1', 39, 'Sudah'),
+(280, '10', 39, 'Sudah'),
+(281, '12', 39, 'Belum'),
+(282, '14', 39, 'Belum'),
+(283, '15', 39, 'Sudah'),
+(284, '16', 39, 'Belum'),
+(285, '17', 39, 'Belum'),
+(286, '18', 39, 'Sudah'),
+(287, '19', 39, 'Sudah'),
+(288, '20', 39, 'Belum'),
+(289, '21', 39, 'Belum'),
+(290, '22', 39, 'Sudah'),
+(291, '23', 39, 'Sudah'),
+(292, '1', 40, 'Sudah'),
+(293, '10', 40, 'Sudah'),
+(294, '12', 40, 'Belum'),
+(295, '14', 40, 'Sudah'),
+(296, '15', 40, 'Belum'),
+(297, '16', 40, 'Belum'),
+(298, '17', 40, 'Belum'),
+(299, '18', 40, 'Belum'),
+(300, '19', 40, 'Belum'),
+(301, '20', 40, 'Belum'),
+(302, '21', 40, 'Sudah'),
+(303, '22', 40, 'Belum'),
+(304, '23', 40, 'Belum'),
+(305, '1', 41, 'Belum'),
+(306, '10', 41, 'Belum'),
+(307, '12', 41, 'Sudah'),
+(308, '14', 41, 'Belum'),
+(309, '15', 41, 'Sudah'),
+(310, '16', 41, 'Sudah'),
+(311, '17', 41, 'Belum'),
+(312, '18', 41, 'Sudah'),
+(313, '19', 41, 'Sudah'),
+(314, '20', 41, 'Belum'),
+(315, '21', 41, 'Belum'),
+(316, '22', 41, 'Sudah'),
+(317, '23', 41, 'Sudah'),
+(318, '1', 42, 'Belum'),
+(319, '10', 42, 'Belum'),
+(320, '12', 42, 'Sudah'),
+(321, '14', 42, 'Sudah'),
+(322, '15', 42, 'Belum'),
+(323, '16', 42, 'Belum'),
+(324, '17', 42, 'Sudah'),
+(325, '18', 42, 'Sudah'),
+(326, '19', 42, 'Sudah'),
+(327, '20', 42, 'Sudah'),
+(328, '21', 42, 'Belum'),
+(329, '22', 42, 'Sudah'),
+(330, '23', 42, 'Belum'),
+(331, '1', 43, 'Sudah'),
+(332, '10', 43, 'Sudah'),
+(333, '12', 43, 'Sudah'),
+(334, '14', 43, 'Belum'),
+(335, '15', 43, 'Sudah'),
+(336, '16', 43, 'Belum'),
+(337, '17', 43, 'Sudah'),
+(338, '18', 43, 'Sudah'),
+(339, '19', 43, 'Sudah'),
+(340, '20', 43, 'Sudah'),
+(341, '21', 43, 'Sudah'),
+(342, '22', 43, 'Belum'),
+(343, '23', 43, 'Belum'),
+(344, '1', 44, 'Belum'),
+(345, '10', 44, 'Sudah'),
+(346, '12', 44, 'Sudah'),
+(347, '14', 44, 'Sudah'),
+(348, '15', 44, 'Sudah'),
+(349, '16', 44, 'Belum'),
+(350, '17', 44, 'Sudah'),
+(351, '18', 44, 'Belum'),
+(352, '19', 44, 'Belum'),
+(353, '20', 44, 'Belum'),
+(354, '21', 44, 'Belum'),
+(355, '22', 44, 'Sudah'),
+(356, '23', 44, 'Belum'),
+(357, '1', 45, 'Belum'),
+(358, '10', 45, 'Sudah'),
+(359, '12', 45, 'Belum'),
+(360, '14', 45, 'Belum'),
+(361, '15', 45, 'Sudah'),
+(362, '16', 45, 'Sudah'),
+(363, '17', 45, 'Belum'),
+(364, '18', 45, 'Sudah'),
+(365, '19', 45, 'Belum'),
+(366, '20', 45, 'Sudah'),
+(367, '21', 45, 'Sudah'),
+(368, '22', 45, 'Sudah'),
+(369, '23', 45, 'Sudah'),
+(370, '1', 46, 'Sudah'),
+(371, '10', 46, 'Sudah'),
+(372, '12', 46, 'Sudah'),
+(373, '14', 46, 'Sudah'),
+(374, '15', 46, 'Sudah'),
+(375, '16', 46, 'Belum'),
+(376, '17', 46, 'Belum'),
+(377, '18', 46, 'Sudah'),
+(378, '19', 46, 'Sudah'),
+(379, '20', 46, 'Sudah'),
+(380, '21', 46, 'Sudah'),
+(381, '22', 46, 'Belum'),
+(382, '23', 46, 'Belum'),
+(383, '1', 47, 'Belum'),
+(384, '10', 47, 'Belum'),
+(385, '12', 47, 'Belum'),
+(386, '14', 47, 'Belum'),
+(387, '15', 47, 'Sudah'),
+(388, '16', 47, 'Sudah'),
+(389, '17', 47, 'Sudah'),
+(390, '18', 47, 'Sudah'),
+(391, '19', 47, 'Sudah'),
+(392, '20', 47, 'Sudah'),
+(393, '21', 47, 'Sudah'),
+(394, '22', 47, 'Sudah'),
+(395, '23', 47, 'Sudah'),
+(396, '1', 48, 'Belum'),
+(397, '10', 48, 'Sudah'),
+(398, '12', 48, 'Sudah'),
+(399, '14', 48, 'Belum'),
+(400, '15', 48, 'Sudah'),
+(401, '16', 48, 'Sudah'),
+(402, '17', 48, 'Belum'),
+(403, '18', 48, 'Sudah'),
+(404, '19', 48, 'Sudah'),
+(405, '20', 48, 'Sudah'),
+(406, '21', 48, 'Sudah'),
+(407, '22', 48, 'Sudah'),
+(408, '23', 48, 'Sudah'),
+(409, '1', 49, 'Sudah'),
+(410, '10', 49, 'Sudah'),
+(411, '12', 49, 'Sudah'),
+(412, '14', 49, 'Sudah'),
+(413, '15', 49, 'Belum'),
+(414, '16', 49, 'Belum'),
+(415, '17', 49, 'Belum'),
+(416, '18', 49, 'Sudah'),
+(417, '19', 49, 'Belum'),
+(418, '20', 49, 'Sudah'),
+(419, '21', 49, 'Sudah'),
+(420, '22', 49, 'Belum'),
+(421, '23', 49, 'Sudah'),
+(422, '1', 50, 'Sudah'),
+(423, '10', 50, 'Sudah'),
+(424, '12', 50, 'Belum'),
+(425, '14', 50, 'Belum'),
+(426, '15', 50, 'Sudah'),
+(427, '16', 50, 'Sudah'),
+(428, '17', 50, 'Sudah'),
+(429, '18', 50, 'Sudah'),
+(430, '19', 50, 'Belum'),
+(431, '20', 50, 'Belum'),
+(432, '21', 50, 'Sudah'),
+(433, '22', 50, 'Belum'),
+(434, '23', 50, 'Sudah'),
+(435, '1', 51, 'Belum'),
+(436, '10', 51, 'Belum'),
+(437, '12', 51, 'Belum'),
+(438, '14', 51, 'Sudah'),
+(439, '15', 51, 'Sudah'),
+(440, '16', 51, 'Sudah'),
+(441, '17', 51, 'Sudah'),
+(442, '18', 51, 'Sudah'),
+(443, '19', 51, 'Belum'),
+(444, '20', 51, 'Sudah'),
+(445, '21', 51, 'Sudah'),
+(446, '22', 51, 'Sudah'),
+(447, '23', 51, 'Sudah'),
+(448, '1', 52, 'Belum'),
+(449, '10', 52, 'Sudah'),
+(450, '12', 52, 'Belum'),
+(451, '14', 52, 'Sudah'),
+(452, '15', 52, 'Belum'),
+(453, '16', 52, 'Sudah'),
+(454, '17', 52, 'Belum'),
+(455, '18', 52, 'Belum'),
+(456, '19', 52, 'Belum'),
+(457, '20', 52, 'Belum'),
+(458, '21', 52, 'Belum'),
+(459, '22', 52, 'Sudah'),
+(460, '23', 52, 'Belum'),
+(461, '1', 53, 'Sudah'),
+(462, '10', 53, 'Belum'),
+(463, '12', 53, 'Sudah'),
+(464, '14', 53, 'Sudah'),
+(465, '15', 53, 'Belum'),
+(466, '16', 53, 'Sudah'),
+(467, '17', 53, 'Belum'),
+(468, '18', 53, 'Sudah'),
+(469, '19', 53, 'Belum'),
+(470, '20', 53, 'Sudah'),
+(471, '21', 53, 'Belum'),
+(472, '22', 53, 'Belum'),
+(473, '23', 53, 'Sudah'),
+(474, '1', 54, 'Belum'),
+(475, '10', 54, 'Belum'),
+(476, '12', 54, 'Sudah'),
+(477, '14', 54, 'Belum'),
+(478, '15', 54, 'Belum'),
+(479, '16', 54, 'Sudah'),
+(480, '17', 54, 'Belum'),
+(481, '18', 54, 'Belum'),
+(482, '19', 54, 'Sudah'),
+(483, '20', 54, 'Belum'),
+(484, '21', 54, 'Belum'),
+(485, '22', 54, 'Belum'),
+(486, '23', 54, 'Sudah'),
+(487, '1', 55, 'Belum'),
+(488, '10', 55, 'Sudah'),
+(489, '12', 55, 'Sudah'),
+(490, '14', 55, 'Sudah'),
+(491, '15', 55, 'Belum'),
+(492, '16', 55, 'Sudah'),
+(493, '17', 55, 'Belum'),
+(494, '18', 55, 'Sudah'),
+(495, '19', 55, 'Belum'),
+(496, '20', 55, 'Sudah'),
+(497, '21', 55, 'Sudah'),
+(498, '22', 55, 'Belum'),
+(499, '23', 55, 'Belum'),
+(500, '1', 56, 'Belum'),
+(501, '10', 56, 'Sudah'),
+(502, '12', 56, 'Sudah'),
+(503, '14', 56, 'Sudah'),
+(504, '15', 56, 'Sudah'),
+(505, '16', 56, 'Sudah'),
+(506, '17', 56, 'Sudah'),
+(507, '18', 56, 'Sudah'),
+(508, '19', 56, 'Sudah'),
+(509, '20', 56, 'Sudah'),
+(510, '21', 56, 'Belum'),
+(511, '22', 56, 'Belum'),
+(512, '23', 56, 'Sudah'),
+(513, '1', 57, 'Sudah'),
+(514, '10', 57, 'Sudah'),
+(515, '12', 57, 'Sudah'),
+(516, '14', 57, 'Belum'),
+(517, '15', 57, 'Belum'),
+(518, '16', 57, 'Belum'),
+(519, '17', 57, 'Sudah'),
+(520, '18', 57, 'Sudah'),
+(521, '19', 57, 'Sudah'),
+(522, '20', 57, 'Sudah'),
+(523, '21', 57, 'Belum'),
+(524, '22', 57, 'Sudah'),
+(525, '23', 57, 'Sudah'),
+(526, '1', 58, 'Sudah'),
+(527, '10', 58, 'Sudah'),
+(528, '12', 58, 'Sudah'),
+(529, '14', 58, 'Sudah'),
+(530, '15', 58, 'Sudah'),
+(531, '16', 58, 'Sudah'),
+(532, '17', 58, 'Sudah'),
+(533, '18', 58, 'Belum'),
+(534, '19', 58, 'Belum'),
+(535, '20', 58, 'Belum'),
+(536, '21', 58, 'Sudah'),
+(537, '22', 58, 'Belum'),
+(538, '23', 58, 'Belum'),
+(539, '1', 59, 'Sudah'),
+(540, '10', 59, 'Sudah'),
+(541, '12', 59, 'Sudah'),
+(542, '14', 59, 'Belum'),
+(543, '15', 59, 'Sudah'),
+(544, '16', 59, 'Sudah'),
+(545, '17', 59, 'Belum'),
+(546, '18', 59, 'Sudah'),
+(547, '19', 59, 'Belum'),
+(548, '20', 59, 'Sudah'),
+(549, '21', 59, 'Belum'),
+(550, '22', 59, 'Sudah'),
+(551, '23', 59, 'Sudah'),
+(552, '1', 60, 'Sudah'),
+(553, '10', 60, 'Belum'),
+(554, '12', 60, 'Belum'),
+(555, '14', 60, 'Belum'),
+(556, '15', 60, 'Belum'),
+(557, '16', 60, 'Sudah'),
+(558, '17', 60, 'Belum'),
+(559, '18', 60, 'Belum'),
+(560, '19', 60, 'Sudah'),
+(561, '20', 60, 'Sudah'),
+(562, '21', 60, 'Belum'),
+(563, '22', 60, 'Belum'),
+(564, '23', 60, 'Sudah'),
+(565, '1', 61, 'Belum'),
+(566, '10', 61, 'Sudah'),
+(567, '12', 61, 'Sudah'),
+(568, '14', 61, 'Sudah'),
+(569, '15', 61, 'Belum'),
+(570, '16', 61, 'Sudah'),
+(571, '17', 61, 'Belum'),
+(572, '18', 61, 'Sudah'),
+(573, '19', 61, 'Sudah'),
+(574, '20', 61, 'Belum'),
+(575, '21', 61, 'Sudah'),
+(576, '22', 61, 'Sudah'),
+(577, '23', 61, 'Belum'),
+(578, '1', 62, 'Belum'),
+(579, '10', 62, 'Sudah'),
+(580, '12', 62, 'Sudah'),
+(581, '14', 62, 'Belum'),
+(582, '15', 62, 'Sudah'),
+(583, '16', 62, 'Belum'),
+(584, '17', 62, 'Belum'),
+(585, '18', 62, 'Belum'),
+(586, '19', 62, 'Belum'),
+(587, '20', 62, 'Belum'),
+(588, '21', 62, 'Belum'),
+(589, '22', 62, 'Belum'),
+(590, '23', 62, 'Sudah'),
+(591, '1', 63, 'Sudah'),
+(592, '10', 63, 'Sudah'),
+(593, '12', 63, 'Belum'),
+(594, '14', 63, 'Belum'),
+(595, '15', 63, 'Sudah'),
+(596, '16', 63, 'Belum'),
+(597, '17', 63, 'Sudah'),
+(598, '18', 63, 'Sudah'),
+(599, '19', 63, 'Belum'),
+(600, '20', 63, 'Sudah'),
+(601, '21', 63, 'Sudah'),
+(602, '22', 63, 'Belum'),
+(603, '23', 63, 'Sudah'),
+(604, '1', 64, 'Belum'),
+(605, '10', 64, 'Sudah'),
+(606, '12', 64, 'Sudah'),
+(607, '14', 64, 'Sudah'),
+(608, '15', 64, 'Belum'),
+(609, '16', 64, 'Sudah'),
+(610, '17', 64, 'Sudah'),
+(611, '18', 64, 'Sudah'),
+(612, '19', 64, 'Sudah'),
+(613, '20', 64, 'Belum'),
+(614, '21', 64, 'Sudah'),
+(615, '22', 64, 'Sudah'),
+(616, '23', 64, 'Belum'),
+(1107, '24', 1, 'Sudah'),
+(1108, '25', 1, 'Belum'),
+(1109, '26', 1, 'Sudah'),
+(1110, '27', 1, 'Sudah'),
+(1111, '28', 1, 'Sudah'),
+(1112, '29', 1, 'Sudah'),
+(1113, '30', 1, 'Sudah'),
+(1114, '31', 1, 'Sudah'),
+(1115, '32', 1, 'Belum'),
+(1116, '33', 1, 'Sudah'),
+(1117, '24', 2, 'Sudah'),
+(1118, '25', 2, 'Sudah'),
+(1119, '26', 2, 'Belum'),
+(1120, '27', 2, 'Sudah'),
+(1121, '28', 2, 'Belum'),
+(1122, '29', 2, 'Belum'),
+(1123, '30', 2, 'Belum'),
+(1124, '31', 2, 'Belum'),
+(1125, '32', 2, 'Belum'),
+(1126, '33', 2, 'Sudah'),
+(1127, '24', 3, 'Sudah'),
+(1128, '25', 3, 'Belum'),
+(1129, '26', 3, 'Sudah'),
+(1130, '27', 3, 'Belum'),
+(1131, '28', 3, 'Sudah'),
+(1132, '29', 3, 'Belum'),
+(1133, '30', 3, 'Sudah'),
+(1134, '31', 3, 'Sudah'),
+(1135, '32', 3, 'Belum'),
+(1136, '33', 3, 'Sudah'),
+(1137, '24', 4, 'Sudah'),
+(1138, '25', 4, 'Belum'),
+(1139, '26', 4, 'Sudah'),
+(1140, '27', 4, 'Sudah'),
+(1141, '28', 4, 'Sudah'),
+(1142, '29', 4, 'Sudah'),
+(1143, '30', 4, 'Sudah'),
+(1144, '31', 4, 'Belum'),
+(1145, '32', 4, 'Sudah'),
+(1146, '33', 4, 'Belum'),
+(1147, '24', 5, 'Belum'),
+(1148, '25', 5, 'Sudah'),
+(1149, '26', 5, 'Sudah'),
+(1150, '27', 5, 'Sudah'),
+(1151, '28', 5, 'Sudah'),
+(1152, '29', 5, 'Sudah'),
+(1153, '30', 5, 'Sudah'),
+(1154, '31', 5, 'Sudah'),
+(1155, '32', 5, 'Belum'),
+(1156, '33', 5, 'Sudah'),
+(1157, '24', 6, 'Belum'),
+(1158, '25', 6, 'Belum'),
+(1159, '26', 6, 'Sudah'),
+(1160, '27', 6, 'Sudah'),
+(1161, '28', 6, 'Belum'),
+(1162, '29', 6, 'Sudah'),
+(1163, '30', 6, 'Sudah'),
+(1164, '31', 6, 'Sudah'),
+(1165, '32', 6, 'Belum'),
+(1166, '33', 6, 'Belum'),
+(1167, '24', 7, 'Sudah'),
+(1168, '25', 7, 'Sudah'),
+(1169, '26', 7, 'Sudah'),
+(1170, '27', 7, 'Belum'),
+(1171, '28', 7, 'Sudah'),
+(1172, '29', 7, 'Sudah'),
+(1173, '30', 7, 'Belum'),
+(1174, '31', 7, 'Sudah'),
+(1175, '32', 7, 'Belum'),
+(1176, '33', 7, 'Belum'),
+(1177, '24', 8, 'Sudah'),
+(1178, '25', 8, 'Belum'),
+(1179, '26', 8, 'Belum'),
+(1180, '27', 8, 'Belum'),
+(1181, '28', 8, 'Sudah'),
+(1182, '29', 8, 'Belum'),
+(1183, '30', 8, 'Sudah'),
+(1184, '31', 8, 'Sudah'),
+(1185, '32', 8, 'Sudah'),
+(1186, '33', 8, 'Sudah'),
+(1187, '24', 9, 'Sudah'),
+(1188, '25', 9, 'Belum'),
+(1189, '26', 9, 'Belum'),
+(1190, '27', 9, 'Sudah'),
+(1191, '28', 9, 'Belum'),
+(1192, '29', 9, 'Sudah'),
+(1193, '30', 9, 'Sudah'),
+(1194, '31', 9, 'Belum'),
+(1195, '32', 9, 'Sudah'),
+(1196, '33', 9, 'Belum'),
+(1197, '24', 10, 'Sudah'),
+(1198, '25', 10, 'Belum'),
+(1199, '26', 10, 'Sudah'),
+(1200, '27', 10, 'Belum'),
+(1201, '28', 10, 'Belum'),
+(1202, '29', 10, 'Sudah'),
+(1203, '30', 10, 'Sudah'),
+(1204, '31', 10, 'Sudah'),
+(1205, '32', 10, 'Sudah'),
+(1206, '33', 10, 'Sudah'),
+(1207, '24', 11, 'Belum'),
+(1208, '25', 11, 'Belum'),
+(1209, '26', 11, 'Belum'),
+(1210, '27', 11, 'Belum'),
+(1211, '28', 11, 'Sudah'),
+(1212, '29', 11, 'Belum'),
+(1213, '30', 11, 'Sudah'),
+(1214, '31', 11, 'Sudah'),
+(1215, '32', 11, 'Sudah'),
+(1216, '33', 11, 'Sudah'),
+(1217, '24', 12, 'Sudah'),
+(1218, '25', 12, 'Belum'),
+(1219, '26', 12, 'Sudah'),
+(1220, '27', 12, 'Sudah'),
+(1221, '28', 12, 'Sudah'),
+(1222, '29', 12, 'Sudah'),
+(1223, '30', 12, 'Belum'),
+(1224, '31', 12, 'Sudah'),
+(1225, '32', 12, 'Belum'),
+(1226, '33', 12, 'Sudah'),
+(1227, '24', 13, 'Belum'),
+(1228, '25', 13, 'Sudah'),
+(1229, '26', 13, 'Sudah'),
+(1230, '27', 13, 'Sudah'),
+(1231, '28', 13, 'Sudah'),
+(1232, '29', 13, 'Sudah'),
+(1233, '30', 13, 'Sudah'),
+(1234, '31', 13, 'Belum'),
+(1235, '32', 13, 'Belum'),
+(1236, '33', 13, 'Sudah'),
+(1237, '24', 14, 'Sudah'),
+(1238, '25', 14, 'Belum'),
+(1239, '26', 14, 'Belum'),
+(1240, '27', 14, 'Sudah'),
+(1241, '28', 14, 'Belum'),
+(1242, '29', 14, 'Belum'),
+(1243, '30', 14, 'Sudah'),
+(1244, '31', 14, 'Belum'),
+(1245, '32', 14, 'Sudah'),
+(1246, '33', 14, 'Belum'),
+(1247, '24', 15, 'Sudah'),
+(1248, '25', 15, 'Belum'),
+(1249, '26', 15, 'Sudah'),
+(1250, '27', 15, 'Sudah'),
+(1251, '28', 15, 'Sudah'),
+(1252, '29', 15, 'Sudah'),
+(1253, '30', 15, 'Belum'),
+(1254, '31', 15, 'Sudah'),
+(1255, '32', 15, 'Sudah'),
+(1256, '33', 15, 'Sudah'),
+(1257, '24', 16, 'Belum'),
+(1258, '25', 16, 'Sudah'),
+(1259, '26', 16, 'Sudah'),
+(1260, '27', 16, 'Sudah'),
+(1261, '28', 16, 'Sudah'),
+(1262, '29', 16, 'Sudah'),
+(1263, '30', 16, 'Belum'),
+(1264, '31', 16, 'Sudah'),
+(1265, '32', 16, 'Belum'),
+(1266, '33', 16, 'Sudah'),
+(1267, '24', 17, 'Sudah'),
+(1268, '25', 17, 'Sudah'),
+(1269, '26', 17, 'Sudah'),
+(1270, '27', 17, 'Belum'),
+(1271, '28', 17, 'Sudah'),
+(1272, '29', 17, 'Belum'),
+(1273, '30', 17, 'Belum'),
+(1274, '31', 17, 'Belum'),
+(1275, '32', 17, 'Sudah'),
+(1276, '33', 17, 'Belum'),
+(1277, '24', 18, 'Sudah'),
+(1278, '25', 18, 'Sudah'),
+(1279, '26', 18, 'Sudah'),
+(1280, '27', 18, 'Sudah'),
+(1281, '28', 18, 'Sudah'),
+(1282, '29', 18, 'Belum'),
+(1283, '30', 18, 'Sudah'),
+(1284, '31', 18, 'Sudah'),
+(1285, '32', 18, 'Sudah'),
+(1286, '33', 18, 'Belum'),
+(1287, '24', 19, 'Sudah'),
+(1288, '25', 19, 'Sudah'),
+(1289, '26', 19, 'Belum'),
+(1290, '27', 19, 'Sudah'),
+(1291, '28', 19, 'Sudah'),
+(1292, '29', 19, 'Sudah'),
+(1293, '30', 19, 'Sudah'),
+(1294, '31', 19, 'Sudah'),
+(1295, '32', 19, 'Belum'),
+(1296, '33', 19, 'Sudah'),
+(1297, '24', 20, 'Sudah'),
+(1298, '25', 20, 'Sudah'),
+(1299, '26', 20, 'Sudah'),
+(1300, '27', 20, 'Sudah'),
+(1301, '28', 20, 'Belum'),
+(1302, '29', 20, 'Belum'),
+(1303, '30', 20, 'Sudah'),
+(1304, '31', 20, 'Sudah'),
+(1305, '32', 20, 'Sudah'),
+(1306, '33', 20, 'Sudah'),
+(1307, '24', 21, 'Sudah'),
+(1308, '25', 21, 'Sudah'),
+(1309, '26', 21, 'Belum'),
+(1310, '27', 21, 'Sudah'),
+(1311, '28', 21, 'Sudah'),
+(1312, '29', 21, 'Belum'),
+(1313, '30', 21, 'Belum'),
+(1314, '31', 21, 'Belum'),
+(1315, '32', 21, 'Sudah'),
+(1316, '33', 21, 'Belum'),
+(1317, '24', 22, 'Sudah'),
+(1318, '25', 22, 'Sudah'),
+(1319, '26', 22, 'Sudah'),
+(1320, '27', 22, 'Sudah'),
+(1321, '28', 22, 'Sudah'),
+(1322, '29', 22, 'Sudah'),
+(1323, '30', 22, 'Belum'),
+(1324, '31', 22, 'Belum'),
+(1325, '32', 22, 'Belum'),
+(1326, '33', 22, 'Sudah'),
+(1327, '24', 23, 'Sudah'),
+(1328, '25', 23, 'Belum'),
+(1329, '26', 23, 'Sudah'),
+(1330, '27', 23, 'Belum'),
+(1331, '28', 23, 'Belum'),
+(1332, '29', 23, 'Sudah'),
+(1333, '30', 23, 'Sudah'),
+(1334, '31', 23, 'Sudah'),
+(1335, '32', 23, 'Sudah'),
+(1336, '33', 23, 'Sudah'),
+(1362, '1788154783-6A95139FEC8CD', 24, 'Sudah'),
+(1363, '1788154783-6A95139FEC8CD', 25, 'Sudah'),
+(1364, '1788154783-6A95139FEC8CD', 26, 'Sudah'),
+(1365, '1788154783-6A95139FEC8CD', 27, 'Sudah'),
+(1366, '1788154783-6A95139FEC8CD', 28, 'Sudah'),
+(1367, '1788154783-6A95139FEC8CD', 29, 'Sudah'),
+(1368, '1788154783-6A95139FEC8CD', 30, 'Sudah'),
+(1369, '1788154783-6A95139FEC8CD', 31, 'Sudah'),
+(1370, '1788154783-6A95139FEC8CD', 32, 'Sudah'),
+(1371, '1788154783-6A95139FEC8CD', 33, 'Sudah'),
+(1372, '1788154783-6A95139FEC8CD', 34, 'Sudah'),
+(1373, '1788154783-6A95139FEC8CD', 35, 'Sudah'),
+(1374, '1788154783-6A95139FEC8CD', 36, 'Sudah'),
+(1375, '1788154783-6A95139FEC8CD', 37, 'Sudah'),
+(1376, '1788154783-6A95139FEC8CD', 38, 'Sudah'),
+(1377, '1788154783-6A95139FEC8CD', 39, 'Sudah'),
+(1378, '1788154783-6A95139FEC8CD', 40, 'Sudah'),
+(1379, '1788154783-6A95139FEC8CD', 41, 'Sudah'),
+(1380, '1788154783-6A95139FEC8CD', 42, 'Sudah'),
+(1381, '1788154783-6A95139FEC8CD', 43, 'Sudah'),
+(1382, '1788154783-6A95139FEC8CD', 44, 'Sudah'),
+(1383, '1788154783-6A95139FEC8CD', 45, 'Sudah'),
+(1384, '1788154783-6A95139FEC8CD', 46, 'Sudah'),
+(1385, '1788154783-6A95139FEC8CD', 47, 'Sudah'),
+(1386, '1788154783-6A95139FEC8CD', 48, 'Sudah'),
+(1387, '1788154783-6A95139FEC8CD', 49, 'Sudah'),
+(1388, '1788154783-6A95139FEC8CD', 50, 'Sudah'),
+(1389, '1788154783-6A95139FEC8CD', 51, 'Sudah'),
+(1390, '1788154783-6A95139FEC8CD', 52, 'Sudah'),
+(1391, '1788154783-6A95139FEC8CD', 53, 'Sudah'),
+(1392, '1788154783-6A95139FEC8CD', 54, 'Sudah'),
+(1393, '1788154783-6A95139FEC8CD', 55, 'Sudah'),
+(1394, '1788154783-6A95139FEC8CD', 56, 'Sudah'),
+(1395, '1788154783-6A95139FEC8CD', 57, 'Sudah'),
+(1396, '1788154783-6A95139FEC8CD', 58, 'Sudah'),
+(1397, '1788154783-6A95139FEC8CD', 59, 'Sudah'),
+(1398, '1788154783-6A95139FEC8CD', 60, 'Sudah'),
+(1399, '1788154783-6A95139FEC8CD', 61, 'Sudah'),
+(1400, '1788154783-6A95139FEC8CD', 62, 'Sudah'),
+(1401, '1788154783-6A95139FEC8CD', 63, 'Sudah'),
+(1402, '1788154783-6A95139FEC8CD', 64, 'Sudah'),
+(1403, '12', 24, 'Sudah'),
+(1404, '12', 25, 'Sudah'),
+(1405, '12', 26, 'Sudah'),
+(1406, '12', 27, 'Sudah'),
+(1407, '12', 28, 'Sudah'),
+(1408, '12', 29, 'Sudah'),
+(1409, '12', 30, 'Sudah'),
+(1410, '12', 31, 'Sudah'),
+(1411, '29', 1, 'Sudah'),
+(1412, '29', 2, 'Sudah'),
+(1413, '29', 3, 'Sudah'),
+(1414, '29', 4, 'Sudah'),
+(1415, '29', 5, 'Sudah'),
+(1416, '29', 6, 'Sudah'),
+(1417, '12', 24, 'Sudah'),
+(1418, '12', 25, 'Sudah'),
+(1419, '12', 26, 'Sudah'),
+(1420, '12', 27, 'Sudah'),
+(1421, '12', 28, 'Sudah'),
+(1422, '12', 29, 'Sudah'),
+(1423, '12', 30, 'Sudah'),
+(1424, '12', 31, 'Sudah');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `features`
+--
+
+CREATE TABLE `features` (
+  `id` int NOT NULL,
+  `level_id` int NOT NULL,
+  `feature_name` varchar(255) NOT NULL,
+  `usage_practice` text,
+  `example_usage` text
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `features`
+--
+
+INSERT INTO `features` (`id`, `level_id`, `feature_name`, `usage_practice`, `example_usage`) VALUES
+(1, 1, 'Whiteboard', 'Menulis menggunakan stylus.', 'Menjelaskan konsep atau rumus atau peta konsep.'),
+(2, 1, 'Pen Tool', 'Mengubah warna dan ketebalan pena.', 'Memberi penekanan pada informasi penting.'),
+(3, 1, 'Eraser, Undo, Redo', 'Menghapus dan memperbaiki tulisan.', 'Menyempurnakan penjelasan tanpa mengulang.'),
+(4, 1, 'Media Viewer', 'Membuka PDF, PPT, gambar, dan video.', 'Menyajikan materi pembelajaran digital.'),
+(5, 1, 'Annotation', 'Memberi anotasi pada dokumen.', 'Menjelaskan bagian penting suatu materi.'),
+(6, 1, 'Save Whiteboard', 'Menyimpan hasil Whiteboard.', 'Membagikan catatan pembelajaran kepada murid.'),
+(7, 2, 'Dual Whiteboard', 'Menampilkan dua papan tulis digital secara berdampingan.', 'Membandingkan materi dengan hasil diskusi atau analisis murid secara bersamaan.'),
+(8, 2, 'Insert Object', 'Menambahkan gambar dan bentuk.', 'Menyusun diagram atau ilustrasi.'),
+(9, 2, 'Shape & Text', 'Membuat bagan sederhana.', 'Menyusun peta konsep bersama murid.'),
+(10, 2, 'Screen Capture', 'Mengambil tangkapan layar.', 'Mendokumentasikan hasil pembelajaran.'),
+(11, 2, 'Screen Recording', 'Merekam aktivitas layar.', 'Membuat video pembelajaran.'),
+(12, 2, 'Export PDF', 'Menyimpan hasil Whiteboard.', 'Membagikan hasil diskusi.'),
+(13, 2, 'QR Code', 'Membagikan file.', 'Murid mengakses materi secara mandiri.'),
+(14, 3, 'Multi-touch', 'Kolaborasi beberapa pengguna.', 'Murid menyusun peta konsep bersama.'),
+(15, 3, 'Screen Sharing', 'Menampilkan layar laptop/HP.', 'Presentasi hasil kerja kelompok.'),
+(16, 3, 'Browser', 'Mengakses sumber belajar.', 'Eksplorasi Simulasi Ruang Murid atau PhET.'),
+(17, 3, 'Screen Capture & Annotation', 'Mengambil tangkapan layar dan mengimpornya ke Whiteboard.', 'Menganalisis gambar, grafik, atau hasil simulasi melalui anotasi dan diskusi bersama.'),
+(18, 3, 'Floating Window', 'Membuka aplikasi pendukung.', 'Membandingkan berbagai sumber belajar.'),
+(19, 4, 'Kecerdasan Artifisial', 'Membuat media pembelajaran.', 'Menyusun media interaktif.'),
+(20, 4, 'LMS', 'Menghubungkan kelas digital.', 'Distribusi materi dan tugas.'),
+(21, 4, 'Video Conference', 'Pembelajaran sinkron.', 'Kolaborasi dengan narasumber.'),
+(22, 4, 'Hybrid Learning', 'Menggabungkan berbagai layanan.', 'Belajar luring dan daring.'),
+(23, 4, 'Digital Presentation', 'Presentasi hasil belajar.', 'Gallery Walk Digital.'),
+(24, 5, 'Peralatan pendukung perawatan & pemeliharaan PID', 'Perawatan & Troubleshooting', 'Modul Tata Kelola'),
+(25, 5, 'Prosedur & teknis perawatan/pemeliharaan PID', 'Perawatan & Troubleshooting', 'Modul Tata Kelola'),
+(26, 5, 'Panduan troubleshooting aplikasi', 'Perawatan & Troubleshooting', 'Modul Tata Kelola'),
+(27, 5, 'Pengamanan peralatan (fisik, teknis, operasional)', 'Keamanan & SOP', 'Modul Tata Kelola'),
+(28, 5, 'Prosedur penyimpanan PID', 'Keamanan & SOP', 'Modul Tata Kelola'),
+(29, 5, 'SOP & form pendukung (kebijakan, checklist, form kendala/instalasi)', 'Keamanan & SOP', 'Modul Tata Kelola'),
+(30, 5, 'Fitur manajemen on/off otomatis (auto power schedule)', 'Manajemen Daya & Sistem', 'Modul Tata Kelola'),
+(31, 5, 'Manajemen akun pengguna PID (menambah/menghapus/mengatur hak akses)', 'Manajemen Daya & Sistem', 'Modul Tata Kelola'),
+(32, 6, 'Menghidupkan/mematikan PID & navigasi menu dasar', 'Pengoperasian Dasar Perangkat', 'Substitution'),
+(33, 6, 'Mengenal komponen/peralatan PID', 'Pengoperasian Dasar Perangkat', 'Substitution'),
+(34, 6, 'Pengaturan dasar audio, kamera & keyboard on-screen', 'Pengoperasian Dasar Perangkat', 'Substitution'),
+(35, 6, 'Mengaktifkan & menghubungkan ke jaringan internet / hotspot', 'Pengoperasian Dasar Perangkat', 'Substitution'),
+(36, 6, 'Mengubah pengaturan bahasa sistem', 'Pengoperasian Dasar Perangkat', 'Substitution'),
+(37, 6, 'Membuka aplikasi Whiteboard & menulis dengan stylus', 'Whiteboard Dasar', 'Substitution'),
+(38, 6, 'Mengubah warna, ketebalan pena & fungsi Eraser/Undo/Redo', 'Whiteboard Dasar', 'Substitution'),
+(39, 6, 'Mengubah background/kanvas & menambah halaman/jendela baru', 'Whiteboard Dasar', 'Substitution'),
+(40, 6, 'Membuka file media (PDF, PPT, gambar, video) & memberi anotasi sederhana', 'Media & Anotasi', 'Substitution'),
+(41, 6, 'Menyimpan hasil Whiteboard ke file & menghubungkan perangkat via kabel', 'Penyimpanan & Konektivitas Dasar', 'Substitution'),
+(42, 7, 'Split Screen (dua aplikasi) & Split Whiteboard (dua area kerja)', 'Tampilan & Presentasi', 'Augmentation'),
+(43, 7, 'Menyisipkan objek, gambar, dan bentuk (shape) ke Whiteboard', 'Whiteboard Lanjutan', 'Augmentation'),
+(44, 7, 'Menduplikasi objek/teks & Smart Shape / Smart Word', 'Whiteboard Lanjutan', 'Augmentation'),
+(45, 7, 'Menggunakan alat bantu presisi (penggaris, busur, dll)', 'Whiteboard Lanjutan', 'Augmentation'),
+(46, 7, 'Mengakses web dari dalam aplikasi Whiteboard', 'Whiteboard Lanjutan', 'Augmentation'),
+(47, 7, 'Tangkapan layar (screenshot) & Perekam layar (screen recording)', 'Dokumentasi Layar', 'Augmentation'),
+(48, 7, 'Mengekspor hasil Whiteboard ke PDF/gambar', 'Dokumentasi Layar', 'Augmentation'),
+(49, 7, 'Manajemen folder & file (USB, internal, cloud)', 'Manajemen File', 'Augmentation'),
+(50, 7, 'Berbagi file hasil kerja via QR Code, USB, atau Cloud', 'Berbagi File', 'Augmentation'),
+(51, 7, 'Screen sharing nirkabel dari satu laptop/HP ke PID', 'Konektivitas', 'Augmentation'),
+(52, 7, 'Gestur multi-touch dasar (pinch/rotate/geser)', 'Konektivitas', 'Augmentation'),
+(53, 8, 'Kolaborasi multi-touch antar banyak pengguna sekaligus', 'Kolaborasi', 'Modification'),
+(54, 8, 'Menyunting hasil diskusi bersama secara real-time', 'Kolaborasi', 'Modification'),
+(55, 8, 'Screen sharing multi-perangkat untuk kolaborasi/perbandingan kelompok', 'Konektivitas Lanjutan', 'Modification'),
+(56, 8, 'Mengakses & memanfaatkan aplikasi/sumber belajar pendukung', 'Eksplorasi Sumber Belajar', 'Modification'),
+(57, 8, 'Menampilkan & membandingkan multi-sumber belajar sekaligus', 'Eksplorasi Sumber Belajar', 'Modification'),
+(58, 8, 'Menggunakan fitur polling/kuis real-time', 'Asesmen Interaktif', 'Modification'),
+(59, 9, 'Menganalisis capaian/tujuan pembelajaran sebagai dasar pengembangan', 'Pengembangan Konten KA', 'Redefinition'),
+(60, 9, 'Mengembangkan media pembelajaran interaktif dengan KA', 'Pengembangan Konten KA', 'Redefinition'),
+(61, 9, 'Menyusun asesmen (butir soal/rubrik/umpan balik) dengan KA', 'Pengembangan Konten KA', 'Redefinition'),
+(62, 9, 'Mengintegrasikan media & asesmen ke skenario pembelajaran utuh', 'Integrasi & Diseminasi', 'Redefinition'),
+(63, 9, 'Menyajikan hasil pengembangan untuk umpan balik', 'Integrasi & Diseminasi', 'Redefinition'),
+(64, 9, 'Menghubungkan pembelajaran dengan LMS/Video Conference', 'Integrasi & Diseminasi', 'Redefinition');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `game_sessions`
+--
+
+CREATE TABLE `game_sessions` (
+  `id` varchar(50) NOT NULL,
+  `pin` varchar(10) NOT NULL,
+  `session_name` varchar(255) NOT NULL,
+  `instrument_type` enum('PAUD_SD_SMP_SLB_PKBM','SMA_SMK') NOT NULL DEFAULT 'PAUD_SD_SMP_SLB_PKBM',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `status` enum('active','inactive') DEFAULT 'active'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `game_sessions`
+--
+
+INSERT INTO `game_sessions` (`id`, `pin`, `session_name`, `instrument_type`, `created_at`, `status`) VALUES
+('1', '004234', 'Kelas A', 'PAUD_SD_SMP_SLB_PKBM', '2026-08-30 13:43:07', 'active'),
+('10', '289969', 'd', 'PAUD_SD_SMP_SLB_PKBM', '2026-08-31 04:29:33', 'active'),
+('11', '337059', 'f', 'PAUD_SD_SMP_SLB_PKBM', '2026-08-31 04:29:35', 'active'),
+('12', '941807', 'g', 'PAUD_SD_SMP_SLB_PKBM', '2026-08-31 04:29:37', 'active'),
+('13', '212955', 'h', 'PAUD_SD_SMP_SLB_PKBM', '2026-08-31 04:29:39', 'active'),
+('14', '508237', 'i', 'PAUD_SD_SMP_SLB_PKBM', '2026-08-31 04:29:41', 'active'),
+('15', '811169', 'j', 'PAUD_SD_SMP_SLB_PKBM', '2026-08-31 04:29:43', 'active'),
+('16', '651375', 'k', 'PAUD_SD_SMP_SLB_PKBM', '2026-08-31 04:29:46', 'active'),
+('17', '187589', 'rrrr', 'PAUD_SD_SMP_SLB_PKBM', '2026-08-31 04:45:38', 'active'),
+('1788155283-6A9515934E49F', '881660', 'ghghghg', 'PAUD_SD_SMP_SLB_PKBM', '2026-08-31 05:48:03', 'active'),
+('2', '909369', 'Kelas B', 'SMA_SMK', '2026-08-30 13:43:10', 'active'),
+('7', '185284', 'a', 'PAUD_SD_SMP_SLB_PKBM', '2026-08-31 04:29:25', 'active'),
+('8', '765591', 'b', 'PAUD_SD_SMP_SLB_PKBM', '2026-08-31 04:29:27', 'active'),
+('9', '971833', 'c', 'PAUD_SD_SMP_SLB_PKBM', '2026-08-31 04:29:30', 'active');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `levels`
+--
+
+CREATE TABLE `levels` (
+  `id` int NOT NULL,
+  `instrument_type` enum('PAUD_SD_SMP_SLB_PKBM','SMA_SMK') NOT NULL,
+  `level_name` varchar(100) NOT NULL,
+  `level_order` int NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `levels`
+--
+
+INSERT INTO `levels` (`id`, `instrument_type`, `level_name`, `level_order`) VALUES
 (1, 'PAUD_SD_SMP_SLB_PKBM', 'LEVEL 1. SUBSTITUTION', 1),
 (2, 'PAUD_SD_SMP_SLB_PKBM', 'LEVEL 2. AUGMENTATION', 2),
 (3, 'PAUD_SD_SMP_SLB_PKBM', 'LEVEL 3. MODIFICATION', 3),
-(4, 'PAUD_SD_SMP_SLB_PKBM', 'LEVEL 4. REDEFINITION', 4);
-
-INSERT INTO features (level_id, feature_name, usage_practice, example_usage) VALUES
-(1, 'Whiteboard', 'Menulis menggunakan stylus.', 'Menjelaskan konsep atau rumus atau peta konsep.'),
-(1, 'Pen Tool', 'Mengubah warna dan ketebalan pena.', 'Memberi penekanan pada informasi penting.'),
-(1, 'Eraser, Undo, Redo', 'Menghapus dan memperbaiki tulisan.', 'Menyempurnakan penjelasan tanpa mengulang.'),
-(1, 'Media Viewer', 'Membuka PDF, PPT, gambar, dan video.', 'Menyajikan materi pembelajaran digital.'),
-(1, 'Annotation', 'Memberi anotasi pada dokumen.', 'Menjelaskan bagian penting suatu materi.'),
-(1, 'Save Whiteboard', 'Menyimpan hasil Whiteboard.', 'Membagikan catatan pembelajaran kepada murid.'),
-
-(2, 'Dual Whiteboard', 'Menampilkan dua papan tulis digital secara berdampingan.', 'Membandingkan materi dengan hasil diskusi atau analisis murid secara bersamaan.'),
-(2, 'Insert Object', 'Menambahkan gambar dan bentuk.', 'Menyusun diagram atau ilustrasi.'),
-(2, 'Shape & Text', 'Membuat bagan sederhana.', 'Menyusun peta konsep bersama murid.'),
-(2, 'Screen Capture', 'Mengambil tangkapan layar.', 'Mendokumentasikan hasil pembelajaran.'),
-(2, 'Screen Recording', 'Merekam aktivitas layar.', 'Membuat video pembelajaran.'),
-(2, 'Export PDF', 'Menyimpan hasil Whiteboard.', 'Membagikan hasil diskusi.'),
-(2, 'QR Code', 'Membagikan file.', 'Murid mengakses materi secara mandiri.'),
-
-(3, 'Multi-touch', 'Kolaborasi beberapa pengguna.', 'Murid menyusun peta konsep bersama.'),
-(3, 'Screen Sharing', 'Menampilkan layar laptop/HP.', 'Presentasi hasil kerja kelompok.'),
-(3, 'Browser', 'Mengakses sumber belajar.', 'Eksplorasi Simulasi Ruang Murid atau PhET.'),
-(3, 'Screen Capture & Annotation', 'Mengambil tangkapan layar dan mengimpornya ke Whiteboard.', 'Menganalisis gambar, grafik, atau hasil simulasi melalui anotasi dan diskusi bersama.'),
-(3, 'Floating Window', 'Membuka aplikasi pendukung.', 'Membandingkan berbagai sumber belajar.'),
-
-(4, 'Kecerdasan Artifisial', 'Membuat media pembelajaran.', 'Menyusun media interaktif.'),
-(4, 'LMS', 'Menghubungkan kelas digital.', 'Distribusi materi dan tugas.'),
-(4, 'Video Conference', 'Pembelajaran sinkron.', 'Kolaborasi dengan narasumber.'),
-(4, 'Hybrid Learning', 'Menggabungkan berbagai layanan.', 'Belajar luring dan daring.'),
-(4, 'Digital Presentation', 'Presentasi hasil belajar.', 'Gallery Walk Digital.');
-
--- ========================================================
--- 2. DATA INSTRUMEN SMA_SMK (Dari PDF SMA_SMK PID 2026)
--- ========================================================
--- Pemisahan Level untuk SMA_SMK
-INSERT INTO levels (id, instrument_type, level_name, level_order) VALUES
+(4, 'PAUD_SD_SMP_SLB_PKBM', 'LEVEL 4. REDEFINITION', 4),
 (5, 'SMA_SMK', 'Modul Tata Kelola & Keamanan PID', 1),
 (6, 'SMA_SMK', 'Level S - Substitution', 2),
 (7, 'SMA_SMK', 'Level A - Augmentation', 3),
 (8, 'SMA_SMK', 'Level M - Modification', 4),
 (9, 'SMA_SMK', 'Level R - Redefinition', 5);
 
--- 1. Modul Tata Kelola & Keamanan PID (SMA_SMK)
-INSERT INTO features (level_id, feature_name, usage_practice, example_usage) VALUES
-(5, 'Peralatan pendukung perawatan & pemeliharaan PID', 'Perawatan & Troubleshooting', 'Modul Tata Kelola'),
-(5, 'Prosedur & teknis perawatan/pemeliharaan PID', 'Perawatan & Troubleshooting', 'Modul Tata Kelola'),
-(5, 'Panduan troubleshooting aplikasi', 'Perawatan & Troubleshooting', 'Modul Tata Kelola'),
-(5, 'Pengamanan peralatan (fisik, teknis, operasional)', 'Keamanan & SOP', 'Modul Tata Kelola'),
-(5, 'Prosedur penyimpanan PID', 'Keamanan & SOP', 'Modul Tata Kelola'),
-(5, 'SOP & form pendukung (kebijakan, checklist, form kendala/instalasi)', 'Keamanan & SOP', 'Modul Tata Kelola'),
-(5, 'Fitur manajemen on/off otomatis (auto power schedule)', 'Manajemen Daya & Sistem', 'Modul Tata Kelola'),
-(5, 'Manajemen akun pengguna PID (menambah/menghapus/mengatur hak akses)', 'Manajemen Daya & Sistem', 'Modul Tata Kelola');
+-- --------------------------------------------------------
 
--- 2. Level S - Substitution (SMA_SMK)
-INSERT INTO features (level_id, feature_name, usage_practice, example_usage) VALUES
-(6, 'Menghidupkan/mematikan PID & navigasi menu dasar', 'Pengoperasian Dasar Perangkat', 'Substitution'),
-(6, 'Mengenal komponen/peralatan PID', 'Pengoperasian Dasar Perangkat', 'Substitution'),
-(6, 'Pengaturan dasar audio, kamera & keyboard on-screen', 'Pengoperasian Dasar Perangkat', 'Substitution'),
-(6, 'Mengaktifkan & menghubungkan ke jaringan internet / hotspot', 'Pengoperasian Dasar Perangkat', 'Substitution'),
-(6, 'Mengubah pengaturan bahasa sistem', 'Pengoperasian Dasar Perangkat', 'Substitution'),
-(6, 'Membuka aplikasi Whiteboard & menulis dengan stylus', 'Whiteboard Dasar', 'Substitution'),
-(6, 'Mengubah warna, ketebalan pena & fungsi Eraser/Undo/Redo', 'Whiteboard Dasar', 'Substitution'),
-(6, 'Mengubah background/kanvas & menambah halaman/jendela baru', 'Whiteboard Dasar', 'Substitution'),
-(6, 'Membuka file media (PDF, PPT, gambar, video) & memberi anotasi sederhana', 'Media & Anotasi', 'Substitution'),
-(6, 'Menyimpan hasil Whiteboard ke file & menghubungkan perangkat via kabel', 'Penyimpanan & Konektivitas Dasar', 'Substitution');
+--
+-- Table structure for table `respondents`
+--
 
--- 3. Level A - Augmentation (SMA_SMK)
-INSERT INTO features (level_id, feature_name, usage_practice, example_usage) VALUES
-(7, 'Split Screen (dua aplikasi) & Split Whiteboard (dua area kerja)', 'Tampilan & Presentasi', 'Augmentation'),
-(7, 'Menyisipkan objek, gambar, dan bentuk (shape) ke Whiteboard', 'Whiteboard Lanjutan', 'Augmentation'),
-(7, 'Menduplikasi objek/teks & Smart Shape / Smart Word', 'Whiteboard Lanjutan', 'Augmentation'),
-(7, 'Menggunakan alat bantu presisi (penggaris, busur, dll)', 'Whiteboard Lanjutan', 'Augmentation'),
-(7, 'Mengakses web dari dalam aplikasi Whiteboard', 'Whiteboard Lanjutan', 'Augmentation'),
-(7, 'Tangkapan layar (screenshot) & Perekam layar (screen recording)', 'Dokumentasi Layar', 'Augmentation'),
-(7, 'Mengekspor hasil Whiteboard ke PDF/gambar', 'Dokumentasi Layar', 'Augmentation'),
-(7, 'Manajemen folder & file (USB, internal, cloud)', 'Manajemen File', 'Augmentation'),
-(7, 'Berbagi file hasil kerja via QR Code, USB, atau Cloud', 'Berbagi File', 'Augmentation'),
-(7, 'Screen sharing nirkabel dari satu laptop/HP ke PID', 'Konektivitas', 'Augmentation'),
-(7, 'Gestur multi-touch dasar (pinch/rotate/geser)', 'Konektivitas', 'Augmentation');
+CREATE TABLE `respondents` (
+  `id` varchar(50) NOT NULL,
+  `session_id` varchar(50) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `institution` varchar(255) NOT NULL,
+  `completed_level` int DEFAULT '0',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- 4. Level M - Modification (SMA_SMK)
-INSERT INTO features (level_id, feature_name, usage_practice, example_usage) VALUES
-(8, 'Kolaborasi multi-touch antar banyak pengguna sekaligus', 'Kolaborasi', 'Modification'),
-(8, 'Menyunting hasil diskusi bersama secara real-time', 'Kolaborasi', 'Modification'),
-(8, 'Screen sharing multi-perangkat untuk kolaborasi/perbandingan kelompok', 'Konektivitas Lanjutan', 'Modification'),
-(8, 'Mengakses & memanfaatkan aplikasi/sumber belajar pendukung', 'Eksplorasi Sumber Belajar', 'Modification'),
-(8, 'Menampilkan & membandingkan multi-sumber belajar sekaligus', 'Eksplorasi Sumber Belajar', 'Modification'),
-(8, 'Menggunakan fitur polling/kuis real-time', 'Asesmen Interaktif', 'Modification');
+--
+-- Dumping data for table `respondents`
+--
 
--- 5. Level R - Redefinition (SMA_SMK)
-INSERT INTO features (level_id, feature_name, usage_practice, example_usage) VALUES
-(9, 'Menganalisis capaian/tujuan pembelajaran sebagai dasar pengembangan', 'Pengembangan Konten KA', 'Redefinition'),
-(9, 'Mengembangkan media pembelajaran interaktif dengan KA', 'Pengembangan Konten KA', 'Redefinition'),
-(9, 'Menyusun asesmen (butir soal/rubrik/umpan balik) dengan KA', 'Pengembangan Konten KA', 'Redefinition'),
-(9, 'Mengintegrasikan media & asesmen ke skenario pembelajaran utuh', 'Integrasi & Diseminasi', 'Redefinition'),
-(9, 'Menyajikan hasil pengembangan untuk umpan balik', 'Integrasi & Diseminasi', 'Redefinition'),
-(9, 'Menghubungkan pembelajaran dengan LMS/Video Conference', 'Integrasi & Diseminasi', 'Redefinition');
+INSERT INTO `respondents` (`id`, `session_id`, `name`, `institution`, `completed_level`, `created_at`) VALUES
+('1', '2', 'guntur', 'asd', 1, '2026-08-30 13:43:31'),
+('10', '2', '36.93.42.28-pc-thinkcenter', '909369', 5, '2026-08-30 14:34:40'),
+('12', '2', 'ddddddd', 'BAN PDM PROVINSI JAWA TIMUR', 2, '2026-08-31 04:17:17'),
+('14', '2', 'Ahmad Fauzi', 'SMA Negeri 1 Jakarta', 4, '2026-08-31 04:40:20'),
+('15', '2', 'Budi Santoso', 'SMK Negeri 2 Bandung', 5, '2026-08-31 04:25:20'),
+('16', '2', 'Citra Dewi', 'SMA Taruna Nusantara', 2, '2026-08-31 04:10:20'),
+('17', '2', 'Dewi Lestari', 'SMK Muhammadiyah 1', 4, '2026-08-31 03:50:20'),
+('1788154783-6A95139FEC8CD', '2', 'fffff', 'fffff', 5, '2026-08-31 05:39:43'),
+('18', '2', 'Eko Prasetyo', 'SMA 2 Surabaya', 3, '2026-08-31 02:50:20'),
+('19', '2', 'Fajar Ramadhan', 'SMK Negeri 1 Semarang', 3, '2026-08-31 01:50:20'),
+('20', '2', 'Gita Gutawa', 'SMA Labschool', 4, '2026-08-31 00:50:20'),
+('21', '2', 'Hendra Wijaya', 'SMK Negeri 5 Malang', 1, '2026-08-30 23:50:20'),
+('22', '2', 'Indah Permata', 'SMA Negeri 3 Yogyakarta', 2, '2026-08-30 22:50:20'),
+('23', '2', 'Joko Widodo', 'SMK Penerbangan', 5, '2026-08-30 21:50:20'),
+('24', '1', 'Siti Nurhaliza', 'TK Negeri Pembina', 4, '2026-08-31 05:11:01'),
+('25', '1', 'Ahmad Sanusi', 'SDN Menteng 01', 5, '2026-08-31 04:56:01'),
+('26', '1', 'Rina Anggraini', 'SMP Negeri 1 Bandung', 3, '2026-08-31 04:41:01'),
+('27', '1', 'Dewi Kartika', 'SLB Negeri A Jakarta', 2, '2026-08-31 04:26:01'),
+('28', '1', 'Bambang Supriyanto', 'PKBM Harapan Bangsa', 4, '2026-08-31 03:26:01'),
+('29', '1', 'Anisa Rahmawati', 'SD Islam Terpadu', 2, '2026-08-31 02:26:01'),
+('30', '1', 'Dian Sastro', 'TK Pembina Surabaya', 4, '2026-08-31 01:26:01'),
+('31', '1', 'Hasan Basri', 'SMP Negeri 3 Semarang', 6, '2026-08-31 00:26:01'),
+('32', '1', 'Fitriani', 'PKBM Bintang Mulia', 2, '2026-08-30 23:26:01'),
+('33', '1', 'Taufik Hidayat', 'SDN Kencana 02', 5, '2026-08-30 22:26:01');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `users`
+--
+
+CREATE TABLE `users` (
+  `id` int NOT NULL,
+  `username` varchar(100) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `name` varchar(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Dumping data for table `users`
+--
+
+INSERT INTO `users` (`id`, `username`, `password`, `name`) VALUES
+(3, 'admin', '$2y$10$kDyt5slo11H5wk5IDHKSnOoh2IktMlCNrKuTbIbf1aesLJ8rXBfuW', 'Administrator');
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `answers`
+--
+ALTER TABLE `answers`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `feature_id` (`feature_id`),
+  ADD KEY `answers_ibfk_1` (`respondent_id`);
+
+--
+-- Indexes for table `features`
+--
+ALTER TABLE `features`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `level_id` (`level_id`);
+
+--
+-- Indexes for table `game_sessions`
+--
+ALTER TABLE `game_sessions`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `pin` (`pin`);
+
+--
+-- Indexes for table `levels`
+--
+ALTER TABLE `levels`
+  ADD PRIMARY KEY (`id`);
+
+--
+-- Indexes for table `respondents`
+--
+ALTER TABLE `respondents`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `respondents_ibfk_1` (`session_id`);
+
+--
+-- Indexes for table `users`
+--
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `username` (`username`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `answers`
+--
+ALTER TABLE `answers`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1425;
+
+--
+-- AUTO_INCREMENT for table `features`
+--
+ALTER TABLE `features`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=65;
+
+--
+-- AUTO_INCREMENT for table `levels`
+--
+ALTER TABLE `levels`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- AUTO_INCREMENT for table `users`
+--
+ALTER TABLE `users`
+  MODIFY `id` int NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `answers`
+--
+ALTER TABLE `answers`
+  ADD CONSTRAINT `answers_ibfk_1` FOREIGN KEY (`respondent_id`) REFERENCES `respondents` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `answers_ibfk_2` FOREIGN KEY (`feature_id`) REFERENCES `features` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `features`
+--
+ALTER TABLE `features`
+  ADD CONSTRAINT `features_ibfk_1` FOREIGN KEY (`level_id`) REFERENCES `levels` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `respondents`
+--
+ALTER TABLE `respondents`
+  ADD CONSTRAINT `respondents_ibfk_1` FOREIGN KEY (`session_id`) REFERENCES `game_sessions` (`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
