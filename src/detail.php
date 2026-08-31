@@ -287,6 +287,9 @@ $no = 1;
                                 <td class="text-center text-nowrap">
                                     <div class="btn-group btn-group-sm">
                                         <!-- PERBAIKAN 4: Kirim r['id'] sebagai String ke JavaScript -->
+                                        <a href="result?respondent_id=<?= $r['id'] ?>" class="btn btn-success fw-bold" target="_blank">
+                                            Hasil
+                                        </a>
                                         <button type="button" class="btn btn-info text-white fw-bold" onclick="showAnswersModal('<?= htmlspecialchars(addslashes($r['id'])) ?>', '<?= htmlspecialchars(addslashes($r['name'])) ?>')">
                                             Detail
                                         </button>
