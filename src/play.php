@@ -5,13 +5,13 @@ $respondent_id = isset($_GET['respondent_id']) ? trim($_GET['respondent_id']) : 
 $current_level_order = (int)($_GET['level'] ?? 1);
 
 if (!$respondent_id) {
-    header("Location: index");
+    header("Location: /");
     exit;
 }
 
-// Ambil info Responden & Tipe Instrumen Sesi
+// Ambil info Responden, Tipe Instrumen, serta Status Keaktifan Sesi (Hanya menggunakan gs.status)
 $stmt = $pdo->prepare("
-    SELECT r.*, gs.instrument_type 
+    SELECT r.*, gs.instrument_type, gs.status AS session_status 
     FROM respondents r 
     JOIN game_sessions gs ON gs.id = r.session_id 
     WHERE r.id = ?
@@ -19,8 +19,26 @@ $stmt = $pdo->prepare("
 $stmt->execute([$respondent_id]);
 $respondent = $stmt->fetch();
 
+// 1. Validasi Apakah Responden / Session ID Ditemukan
 if (!$respondent) {
-    header("Location: index");
+    header("Location: index?error=session_not_found");
+    exit;
+}
+
+// 2. Validasi Apakah Session Aktif (Mengecek nilai status dari gs.status)
+$is_session_active = false;
+
+if (isset($respondent['session_status'])) {
+    $status_lower = strtolower(trim($respondent['session_status']));
+    // Mengizinkan status yang bernilai 'active', 'aktif', '1', atau 'open'
+    if (in_array($status_lower, ['active', 'aktif', '1', 'open'])) {
+        $is_session_active = true;
+    }
+}
+
+if (!$is_session_active) {
+    // Jika sesi tidak aktif / ditutup, arahkan kembali ke index
+    header("Location: /?error=session_inactive");
     exit;
 }
 
@@ -238,7 +256,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         <form id="levelForm" method="POST">
             <?php if ($is_paud_sd): ?>
-                <!-- TAMPILAN TABEL PAUD_SD_SMP_SLB_PKBM (Sesuai PDF LK Peserta) -->
+                <!-- TAMPILAN TABEL PAUD_SD_SMP_SLB_PKBM -->
                 <div class="card glass-card border-0 p-3 p-md-4 mb-4">
                     <div class="table-responsive rounded-3">
                         <table class="table table-custom align-middle mb-0">
@@ -311,7 +329,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 <div class="fw-bold fs-6 text-dark mb-1">
                                                     <?= htmlspecialchars($f['feature_name']) ?>
                                                 </div>
-
                                             </td>
                                             <td class="text-center text-nowrap align-middle">
                                                 <div class="btn-group w-100" role="group">
@@ -341,12 +358,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </button>
         </form>
     </div>
+
     <noscript>
         <div style="background:#333;opacity:0.8;filter:alpha(opacity=80);width:100%;height:100%;position:fixed;top:0px;z-index:1099;"></div>
         <div style="background:#000;width:70%;margin:0% 15%;;position:fixed;top:20%;z-index:1100;text-align:center;padding:4%;color:#fff;">
             <p>We're sorry but this apps doesn't work properly without JavaScript enabled. Please enable it to continue.</p>
         </div>
     </noscript>
+
     <!-- Script Konfirmasi SweetAlert2 -->
     <script>
         document.getElementById('btnSimpan').addEventListener('click', function() {
