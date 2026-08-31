@@ -26,12 +26,14 @@ if (!$respondent) {
 
 // Ambil Seluruh Level dan Feature/Pertanyaan beserta Status Jawaban
 $stmt_details = $pdo->prepare("
-    SELECT 
+     SELECT 
         l.id AS level_id,
         l.level_name,
         l.level_order,
         f.id AS feature_id,
         f.feature_name,
+        f.usage_practice,
+        f.example_usage,
         a.status
     FROM levels l
     JOIN features f ON f.level_id = l.id
@@ -93,7 +95,7 @@ foreach ($raw_details as $row) {
         .check-box-cell {
             text-align: center;
             width: 80px;
-            font-size: 11pt;
+            font-size: 10pt;
             font-weight: bold;
         }
 
@@ -151,7 +153,7 @@ foreach ($raw_details as $row) {
         </div>
 
         <!-- Identitas Peserta -->
-        <table class="mb-3" style="border: 0px;">
+        <table class="mb-2" style="border: 0px;">
             <tr>
                 <td><strong>Nama</strong></td>
                 <td style="padding-left: 0.5em;padding-right: 0.5em;">:</td>
@@ -179,32 +181,68 @@ foreach ($raw_details as $row) {
             </tr>
         </table>
 
-        <!-- Loop Per Level -->
-        <?php foreach ($grouped_data as $level_name => $features): ?>
-            <table class="table-ceklis">
-                <thead>
-                    <tr class="bg-level-header">
-                        <th colspan="3" style="border: 0px;" class="text-start fs-6 p-2"><?= htmlspecialchars($level_name) ?></th>
-                    </tr>
-                    <tr class="bg-light text-center fw-bold">
-                        <th width="5%">No</th>
-                        <th width="80%">Fitur / Item Evaluasi</th>
-                        <th width="15%">Ceklis</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php foreach ($features as $index => $item): ?>
-                        <tr>
-                            <td class="text-center"><?= $index + 1 ?></td>
-                            <td><?= htmlspecialchars($item['feature_name']) ?></td>
-                            <td class="check-box-cell">
-                                <?= ($item['status'] === 'Sudah') ? '✓' : '' ?>
-                            </td>
+        <?php if ($respondent['instrument_type'] == 'PAUD_SD_SMP_SLB_PKBM') { ?>
+            <?php foreach ($grouped_data as $level_name => $features): ?>
+                <table class="table-ceklis">
+                    <thead>
+                        <tr class="bg-level-header">
+                            <th colspan="6" style="border: 0px;" class="text-start fs-6 p-2"><?= htmlspecialchars($level_name) ?></th>
                         </tr>
-                    <?php endforeach; ?>
-                </tbody>
-            </table>
-        <?php endforeach; ?>
+                        <tr class="bg-light text-center fw-bold">
+                            <th width="5%">No</th>
+                            <th width="20%">Fitur PID</th>
+                            <th width="20%">Praktik Penggunaan</th>
+                            <th width="40%">Contoh Pemanfaatan</th>
+                            <th width="15%">Ceklis</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($features as $index => $item): ?>
+                            <tr>
+                                <td class="text-center"><?= $index + 1 ?></td>
+                                <td><?= htmlspecialchars($item['feature_name']) ?></td>
+                                <td><?= htmlspecialchars($item['usage_practice']) ?></td>
+                                <td><?= htmlspecialchars($item['example_usage']) ?></td>
+                                <td class="check-box-cell">
+                                    <?= ($item['status'] === 'Sudah') ? '✓' : '' ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endforeach; ?>
+        <?php } elseif ($respondent['instrument_type'] == 'SMA_SMK') { ?>
+            <?php foreach ($grouped_data as $level_name => $features): ?>
+                <table class="table-ceklis">
+                    <thead>
+                        <tr class="bg-level-header">
+                            <th colspan="3" style="border: 0px;" class="text-start fs-6 p-2"><?= htmlspecialchars($level_name) ?></th>
+                        </tr>
+                        <tr class="bg-light text-center fw-bold">
+                            <th width="5%">No</th>
+                            <th width="80%">Fitur / Item Evaluasi</th>
+                            <th width="15%">Ceklis</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($features as $index => $item): ?>
+                            <tr>
+                                <td class="text-center"><?= $index + 1 ?></td>
+                                <td><?= htmlspecialchars($item['feature_name']) ?></td>
+                                <td class="check-box-cell">
+                                    <?= ($item['status'] === 'Sudah') ? '✓' : '' ?>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            <?php endforeach; ?>
+        <?php } else {
+            echo '<p class="fw-bold">Petunjuk: Silakan beri tanda centang (✓) pada kolom "Ceklis" untuk setiap fitur yang telah digunakan.</p>';
+        } ?>
+
+        <!-- Loop Per Level -->
+
     </div>
 
     <script>
