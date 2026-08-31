@@ -115,13 +115,19 @@ if (isset($_GET['api']) && !empty($session_id)) {
 <body class="p-3 p-md-4">
     <div class="container-fluid" style="max-width: 1200px;">
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-            <div>
-                <h2 class="fw-bold text-primary mb-0">Statistik Eksplorasi PID</h2>
-                <small class="text-muted">Pantau grafik penguasaan fitur secara real-time</small>
+            <!-- Pembungkus Logo + Teks Judul -->
+            <div class="d-flex align-items-center">
+                <img src="logo.png" alt="Logo" width="48" height="48" class="me-3">
+                <div>
+                    <h2 class="fw-bold text-primary mb-0">Statistik Eksplorasi PID</h2>
+                    <small class="text-muted">BBPMP Provinsi Jawa Timur</small>
+                </div>
             </div>
-            <a href="index" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left me-1"></i> Kembali ke Beranda
-            </a>
+
+            <!-- Tombol Navigasi -->
+            <!-- <a href="/" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Kembali ke Lembar Kerja PID
+            </a> -->
         </div>
 
         <?php if ($current_session): ?>
@@ -139,10 +145,11 @@ if (isset($_GET['api']) && !empty($session_id)) {
             </div>
 
             <!-- GRAFIK UTAMA: Grafik Batang & Grafik Pie -->
+            <h4 class="fw-bold text-dark mb-3">Grafik Penguasaan Level</h4>
             <div class="row g-4 mb-4">
                 <div class="col-md-6">
                     <div class="card card-custom p-4 h-100 bg-white">
-                        <h5 class="fw-bold text-dark mb-3 text-center">Ringkasan Penguasaan Level (Batang)</h5>
+                        <!-- <h5 class="fw-bold text-dark mb-3 text-center">Grafik Utama (Batang)</h5> -->
                         <div style="position: relative; width: 100%; height: 280px;">
                             <canvas id="mainBarChart"></canvas>
                         </div>
@@ -150,7 +157,7 @@ if (isset($_GET['api']) && !empty($session_id)) {
                 </div>
                 <div class="col-md-6">
                     <div class="card card-custom p-4 h-100 bg-white">
-                        <h5 class="fw-bold text-dark mb-3 text-center">Proporsi Penguasaan Level (Pie)</h5>
+                        <!-- <h5 class="fw-bold text-dark mb-3 text-center">Proporsi Penguasaan Level (Pie)</h5> -->
                         <div style="position: relative; width: 100%; height: 280px;">
                             <canvas id="mainPieChart"></canvas>
                         </div>
@@ -225,8 +232,30 @@ if (isset($_GET['api']) && !empty($session_id)) {
                                         }
                                     },
                                     scales: {
+                                        x: {
+                                            title: {
+                                                display: true,
+                                                text: 'Level / Kategori',
+                                                font: {
+                                                    weight: 'bold'
+                                                }
+                                            },
+                                            ticks: {
+                                                callback: function(val) {
+                                                    let text = this.getLabelForValue(val);
+                                                    return text.length > 18 ? text.substr(0, 16) + '...' : text;
+                                                }
+                                            }
+                                        },
                                         y: {
                                             beginAtZero: true,
+                                            title: {
+                                                display: true,
+                                                text: 'Jumlah Responden',
+                                                font: {
+                                                    weight: 'bold'
+                                                }
+                                            },
                                             ticks: {
                                                 precision: 0
                                             }
