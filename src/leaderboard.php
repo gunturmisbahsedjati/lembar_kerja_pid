@@ -117,7 +117,7 @@ if (isset($_GET['api']) && !empty($session_id)) {
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
             <div>
                 <h2 class="fw-bold text-primary mb-0">Statistik Eksplorasi PID</h2>
-                <small class="text-muted">Pantau grafik penguasaan fitur secara real-time</small>
+                <!-- <small class="text-muted">Pantau grafik penguasaan fitur secara real-time</small> -->
             </div>
             <a href="index" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i> Kembali ke Beranda
