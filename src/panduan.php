@@ -47,6 +47,18 @@
             margin-bottom: 8px;
         }
 
+        .badge-new {
+            background-color: #198754;
+            color: #fff;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            font-weight: bold;
+            vertical-align: middle;
+            margin-left: 5px;
+        }
+
         .footer {
             margin-top: 50px;
             text-align: center;
@@ -59,6 +71,10 @@
         @media print {
             body {
                 padding: 0;
+            }
+
+            .no-print {
+                display: none;
             }
         }
     </style>
@@ -92,12 +108,12 @@
         <li>Pada daftar tabel sesi, klik tombol <strong>QR Code</strong> di baris sesi yang diinginkan.</li>
         <li>Halaman QR Code otomatis menampilkan <strong>Nomor PIN Key Sesi</strong> dan logo aplikasi di tengah QR Code.</li>
         <li>Klik tombol <strong>Unduh QR Code (PNG)</strong> untuk mengunduh gambar QR Code dengan nama file berformat PIN terkait.</li>
-        <li><em>Catatan Validasi:</em> QR Code hanya dapat diakses jika parameter PIN valid dan status sesi dalam kondisi <strong>AKTIF</strong>.</li>
+        <li><em>Catatan Validasi Sesi:</em> QR Code hanya dapat diakses jika parameter PIN valid dan status sesi dalam kondisi <strong>AKTIF</strong>. Sistem secara otomatis menolak akses ke sesi yang dinonaktifkan/ditutup.</li>
     </ul>
 
     <h3>Langkah 4: Mengelola Sesi & Memantau Peserta</h3>
     <ul>
-        <li><strong>Ubah Status:</strong> Klik tombol <strong>Aktifkan/Nonaktifkan</strong> untuk membuka atau menutup akses peserta ke PIN terkait.</li>
+        <li><strong>Ubah Status (Sesi Aktif/Nonaktif):</strong> Klik tombol <strong>Aktifkan/Nonaktifkan</strong> untuk membuka atau menutup akses pengerjaan peserta secara langsung. <span class="badge-new">Update</span></li>
         <li><strong>Detail Sesi:</strong> Masuk ke halaman <strong>Detail</strong> (<code>detail.php</code>) untuk memantau peserta secara <em>real-time</em> dan melihat jawaban individual via modal pop-up.</li>
         <li><strong>Hapus Sesi:</strong> Klik tombol <strong>Hapus</strong> untuk menghapus PIN. Sistem akan menampilkan dialog konfirmasi kustom <em>SweetAlert2</em> sebelum data benar-benar dihapus.</li>
     </ul>
@@ -114,25 +130,32 @@
     <h3>Langkah 1: Bergabung ke Sesi</h3>
     <ul>
         <li>Buka halaman utama aplikasi atau <em>scan</em> <strong>QR Code Sesi</strong>.</li>
-        <li>Masukkan <strong>Kode PIN Sesi</strong> (pastikan sesi statusnya aktif).</li>
+        <li>Masukkan <strong>Kode PIN Sesi</strong>. Sistem akan memverifikasi apakah PIN terdaftar dan status sesi aktif. <span class="badge-new">Update</span></li>
         <li>Isikan <strong>Nama Lengkap</strong> dan <strong>Instansi / Sekolah</strong>.</li>
         <li>Klik <strong>Mulai / Bergabung</strong>.</li>
     </ul>
 
     <h3>Langkah 2: Mengisi Lembar Kerja</h3>
     <ul>
-        <li>Peserta memilih status penguasaan pada setiap indikator/fitur (<strong>Sudah</strong> atau <strong>Belum</strong>).</li>
-        <li>Selesaikan indikator pada level berjalan untuk membuka level berikutnya.</li>
+        <li>Peserta memilih status penguasaan pada setiap indikator/fitur (<strong>Sudah</strong> atau <strong>Belum</strong>) melalui tombol pilihan interaktif.</li>
+        <li>Selesaikan seluruh indikator pada level berjalan untuk dapat menyimpan dan membuka level berikutnya.</li>
+        <li>Sistem akan terus melakukan validasi sesi aktif saat pengiriman lembar kerja. Jika sesi ditutup oleh Host, pengerjaan tidak dapat dilanjutkan. <span class="badge-new">Update</span></li>
     </ul>
 
-    <h3>Langkah 3: Menyelesaikan Sesi</h3>
+    <h3>Langkah 3: Menyelesaikan Sesi & Fitur Pencetakan <span class="badge-new">Update</span></h3>
     <ul>
-        <li>Kirim/simpan jawaban akhir setelah seluruh level terisi.</li>
-        <li>Lihat ringkasan pencapaian level dan jumlah fitur yang dikuasai.</li>
+        <li>Kirim/simpan jawaban akhir setelah seluruh level terisi. Sistem akan mengarahkan ke halaman hasil/ringkasan.</li>
+        <li>Pada halaman ringkasan, peserta dapat memanfaatkan tombol **Dropdown Menu Cetak** untuk memilih mode pencetakan:
+            <ul>
+                <li><strong>Cetak Ringkasan (PDF):</strong> Mengunduh dokumen ringkasan pencapaian level dan skor peserta.</li>
+                <li><strong>Cetak Detail per Pertanyaan:</strong> Membuka dokumen lembar kerja lengkap yang menampilkan seluruh daftar pertanyaan/fitur berurut kebawah beserta ceklis status jawaban.</li>
+            </ul>
+        </li>
+        <li>Seluruh dokumen cetak detail secara otomatis dilengkapi **Nomor Halaman (Halaman X dari Y)** dan identitas instansi di bagian footer halaman A4.</li>
     </ul>
 
     <div class="footer">
-        Dokumen Panduan Lembar Kerja PID &bull; BBPMP Provinsi Jawa Tengah &bull; <?= date('Y') ?>
+        Dokumen Panduan Lembar Kerja PID &bull; BBPMP Provinsi Jawa Timur &bull; <?= date('Y') ?>
     </div>
     <noscript>
         <div style="background:#333;opacity:0.8;filter:alpha(opacity=80);width:100%;height:100%;position:fixed;top:0px;z-index:1099;"></div>
