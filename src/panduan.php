@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <title>Panduan Penggunaan Aplikasi Lembar Kerja PID</title>
     <link rel="icon" type="image/x-icon" href="logo.png" />
+    <meta name="author" content="Arghavan Barra Al Misbah" />
+    <meta name="language" content="Indonesia" />
     <link rel="apple-touch-icon" href="logo.png">
     <style>
         body {
