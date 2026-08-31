@@ -84,26 +84,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($level_data['level_name']) ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Pustaka SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="icon" type="image/x-icon" href="logo.png" />
     <link rel="apple-touch-icon" href="logo.png">
+    <style>
+        /* Animasi Background Gradient Purple to Blue seperti index.php */
+        body {
+            background: linear-gradient(-45deg, #4a00e0, #8e2de2, #00c6ff, #0072ff);
+            background-size: 400% 400%;
+            animation: gradientBG 12s ease infinite;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        @keyframes gradientBG {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* Styling Kartu Efek Transparan / Glassmorphism */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+        }
+    </style>
 </head>
 
-<body class="bg-light p-4">
+<body class="p-4">
     <div class="container" style="max-width: 800px;">
-        <div class="card shadow border-0 p-4 mb-4">
+        <div class="card glass-card border-0 p-4 mb-4">
             <h5 class="text-secondary mb-1">Peserta: <strong><?= htmlspecialchars($respondent['name']) ?></strong> (<?= htmlspecialchars($respondent['institution']) ?>)</h5>
             <span class="badge bg-primary w-auto mb-2" style="width: fit-content;">Instrumen: <?= str_replace('_', ' ', $respondent['instrument_type']) ?></span>
             <h2 class="fw-bold text-primary"><?= htmlspecialchars($level_data['level_name']) ?></h2>
-            <p class="text-muted">Pilih "Sudah" jika Anda telah menguasai/menggunakan fitur berikut. Anda harus menjawab **Sudah** pada semua poin di level ini untuk dapat lanjut ke level berikutnya.</p>
+            <p class="text-muted mb-0">Pilih "Sudah" jika Anda telah menguasai/menggunakan fitur berikut. Anda harus menjawab **Sudah** pada semua poin di level ini untuk dapat lanjut ke level berikutnya.</p>
         </div>
 
         <form id="levelForm" method="POST">
             <?php foreach ($features as $idx => $f): ?>
-                <div class="card shadow-sm border-0 mb-3">
+                <div class="card glass-card border-0 mb-3">
                     <div class="card-body">
                         <h5 class="fw-bold text-dark"><?= ($idx + 1) ?>. <?= htmlspecialchars($f['feature_name']) ?></h5>
                         <?php if ($f['usage_practice']): ?>
@@ -127,7 +160,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             <?php endforeach; ?>
 
-            <button type="button" id="btnSimpan" class="btn btn-success btn-lg w-100 fw-bold my-4">Simpan & Lanjutkan</button>
+            <button type="button" id="btnSimpan" class="btn btn-success btn-lg w-100 fw-bold my-4 shadow">Simpan & Lanjutkan</button>
         </form>
     </div>
 

@@ -84,6 +84,7 @@ $sessions = $pdo->query("
         <a class="navbar-brand fw-bold" href="#">Dashboard Host PID</a>
         <div class="d-flex align-items-center gap-3">
             <span class="text-white">Halo, <strong><?= htmlspecialchars($_SESSION['host_name']) ?></strong></span>
+            <a href="qrcode" target="_blank" class="btn btn-info text-white btn-sm">Link QR</a>
             <a href="host?action=logout" class="btn btn-outline-danger btn-sm">Logout</a>
         </div>
     </nav>
