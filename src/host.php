@@ -190,7 +190,7 @@ $no = 1;
     </div>
 
     <!-- Modal Form Buat PIN -->
-    <div class="modal fade" id="createPinModal" tabindex="-1" aria-labelledby="createPinModalLabel" aria-hidden="true">
+    <div class="modal fade" id="createPinModal" tabindex="-1" data-bs-backdrop="static" aria-labelledby="createPinModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
