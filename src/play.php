@@ -49,20 +49,16 @@ $features = $stmt->fetchAll();
 // Submit Jawaban
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $answers = $_POST['status'] ?? [];
-    $all_sudah = true;
 
     foreach ($features as $f) {
         $status = $answers[$f['id']] ?? 'Belum';
 
         $stmt_ans = $pdo->prepare("INSERT INTO answers (respondent_id, feature_id, status) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE status = ?");
         $stmt_ans->execute([$respondent_id, $f['id'], $status, $status]);
-
-        if ($status !== 'Sudah') {
-            $all_sudah = false;
-        }
     }
 
-    if ($all_sudah && $respondent['completed_level'] < $current_level_order) {
+    // Selalu update progress completed_level jika level saat ini lebih tinggi
+    if ($respondent['completed_level'] < $current_level_order) {
         $stmt_up = $pdo->prepare("UPDATE respondents SET completed_level = ? WHERE id = ?");
         $stmt_up->execute([$current_level_order, $respondent_id]);
     }
@@ -71,7 +67,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt_next = $pdo->prepare("SELECT * FROM levels WHERE instrument_type = ? AND level_order = ?");
     $stmt_next->execute([$respondent['instrument_type'], $next_level]);
 
-    if ($all_sudah && $stmt_next->fetch()) {
+    // Jika level berikutnya ada, langsung arahkan ke level berikutnya
+    if ($stmt_next->fetch()) {
         header("Location: play?respondent_id=$respondent_id&level=$next_level");
     } else {
         header("Location: leaderboard?session_id=" . $respondent['session_id']);
@@ -92,7 +89,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="icon" type="image/x-icon" href="logo.png" />
     <link rel="apple-touch-icon" href="logo.png">
     <style>
-        /* Animasi Background Gradient Purple to Blue seperti index.php */
         body {
             background: linear-gradient(-45deg, #4a00e0, #8e2de2, #00c6ff, #0072ff);
             background-size: 400% 400%;
@@ -115,7 +111,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        /* Styling Kartu Efek Transparan / Glassmorphism */
         .glass-card {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
@@ -131,7 +126,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <h5 class="text-secondary mb-1">Peserta: <strong><?= htmlspecialchars($respondent['name']) ?></strong> (<?= htmlspecialchars($respondent['institution']) ?>)</h5>
             <span class="badge bg-primary w-auto mb-2" style="width: fit-content;">Instrumen: <?= str_replace('_', ' ', $respondent['instrument_type']) ?></span>
             <h2 class="fw-bold text-primary"><?= htmlspecialchars($level_data['level_name']) ?></h2>
-            <p class="text-muted mb-0">Pilih "Sudah" jika Anda telah menguasai/menggunakan fitur berikut. Anda harus menjawab **Sudah** pada semua poin di level ini untuk dapat lanjut ke level berikutnya.</p>
+            <p class="text-muted mb-0">Pilih status penguasaan untuk setiap poin di level ini. Setelah semua terisi, klik tombol di bawah untuk melanjutkan ke level berikutnya.</p>
         </div>
 
         <form id="levelForm" method="POST">
@@ -153,7 +148,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
                             <div class="form-check form-check-inline">
                                 <input class="form-check-input" type="radio" name="status[<?= $f['id'] ?>]" id="belum_<?= $f['id'] ?>" value="Belum" required>
-                                <label class="form-check-label fw-bold text-danger" for="belum_<?= $f['id'] ?>">Belum</label>
+                                <label class="form-check-label fw-bold text-danger" for="belum_<?= $f['id'] ?>">Belum (✗)</label>
                             </div>
                         </div>
                     </div>
@@ -168,7 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         document.getElementById('btnSimpan').addEventListener('click', function() {
             const form = document.getElementById('levelForm');
 
-            // Cek kelengkapan radio button (atribut required)
+            // Cek kelengkapan pengisian radio button
             if (!form.checkValidity()) {
                 form.reportValidity();
                 return;
@@ -177,7 +172,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Pop-up Konfirmasi SweetAlert2
             Swal.fire({
                 title: 'Konfirmasi Simpan',
-                text: "Apakah Anda yakin ingin menyimpan jawaban ini?",
+                text: "Apakah Anda yakin ingin menyimpan jawaban dan melanjutkan ke level berikutnya?",
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#198754',

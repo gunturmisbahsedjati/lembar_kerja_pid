@@ -20,6 +20,9 @@ if (!$session) {
     exit;
 }
 
+$toast_status = null;
+$toast_message = '';
+
 // ==========================================
 // FITUR EXPORT EXCEL
 // ==========================================
@@ -128,6 +131,17 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete_respondent') {
     }
 }
 
+// Cek Notifikasi Pesan untuk Toast
+if (isset($_GET['msg'])) {
+    if ($_GET['msg'] === 'deleted') {
+        $toast_status = 'success';
+        $toast_message = 'Peserta dan seluruh jawabannya berhasil dihapus!';
+    } elseif ($_GET['msg'] === 'error') {
+        $toast_status = 'error';
+        $toast_message = 'Gagal menghapus data peserta.';
+    }
+}
+
 // Endpoint AJAX: Mengambil Detail Pertanyaan & Jawaban Khusus Instrumen Peserta
 if (isset($_GET['api']) && $_GET['api'] === 'get_answers') {
     header('Content-Type: application/json');
@@ -188,11 +202,6 @@ $respondents = $stmt_respondents->fetchAll();
     </nav>
 
     <div class="container" style="max-width: 1100px;">
-        <?php if (isset($_GET['msg']) && $_GET['msg'] === 'deleted'): ?>
-            <div class="alert alert-success alert-dismissible fade show">Peserta dan seluruh jawabannya berhasil dihapus!<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-        <?php elseif (isset($_GET['msg']) && $_GET['msg'] === 'error'): ?>
-            <div class="alert alert-danger alert-dismissible fade show">Gagal menghapus data peserta.<button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-        <?php endif; ?>
 
         <!-- Header Ringkasan Sesi -->
         <div class="card shadow-sm border-0 mb-4 p-4">
@@ -313,6 +322,34 @@ $respondents = $stmt_respondents->fetchAll();
 
     <script>
         const answersModal = new bootstrap.Modal(document.getElementById('answersModal'));
+
+        // Konfigurasi dasar SweetAlert2 Toast
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        // Hapus query parameter msg dari URL setelah halaman dimuat
+        if (window.location.search.includes('msg=')) {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('msg');
+            window.history.replaceState({}, document.title, url.toString());
+        }
+
+        // Tampilkan Toast jika ada notifikasi dari PHP
+        <?php if ($toast_status && $toast_message): ?>
+            Toast.fire({
+                icon: '<?= $toast_status ?>',
+                title: '<?= $toast_message ?>'
+            });
+        <?php endif; ?>
 
         // Tampilkan Pop-Up Modal Detail Pertanyaan & Jawaban Peserta
         function showAnswersModal(respondentId, respondentName) {
