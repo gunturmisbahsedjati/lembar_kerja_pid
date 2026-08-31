@@ -117,7 +117,7 @@ if (isset($_GET['api']) && !empty($session_id)) {
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
             <div>
                 <h2 class="fw-bold text-primary mb-0">Statistik Eksplorasi PID</h2>
-                <!-- <small class="text-muted">Pantau grafik penguasaan fitur secara real-time</small> -->
+                <small class="text-muted">Pantau grafik penguasaan fitur secara real-time</small>
             </div>
             <a href="index" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left me-1"></i> Kembali ke Beranda
@@ -182,6 +182,7 @@ if (isset($_GET['api']) && !empty($session_id)) {
             let mainPieChartInstance = null;
             const levelChartInstances = {};
 
+            // Palette Warna Konsisten
             const chartColors = [
                 '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796'
             ];
@@ -268,6 +269,8 @@ if (isset($_GET['api']) && !empty($session_id)) {
 
                         data.level_charts.forEach((levelData, index) => {
                             const canvasId = `chart_level_${levelData.level_id}`;
+                            // Ambil warna yang selaras dengan grafik utama berdasarkan index level
+                            const currentColor = chartColors[index % chartColors.length];
 
                             if (!document.getElementById(canvasId)) {
                                 if (index === 0) container.innerHTML = '';
@@ -290,6 +293,8 @@ if (isset($_GET['api']) && !empty($session_id)) {
                             if (levelChartInstances[canvasId]) {
                                 levelChartInstances[canvasId].data.labels = levelData.features;
                                 levelChartInstances[canvasId].data.datasets[0].data = levelData.totals;
+                                levelChartInstances[canvasId].data.datasets[0].backgroundColor = currentColor;
+                                levelChartInstances[canvasId].data.datasets[0].borderColor = currentColor;
                                 levelChartInstances[canvasId].update();
                             } else {
                                 levelChartInstances[canvasId] = new Chart(ctxLevel, {
@@ -299,8 +304,8 @@ if (isset($_GET['api']) && !empty($session_id)) {
                                         datasets: [{
                                             label: 'Jumlah Responden Menguasai (Sudah)',
                                             data: levelData.totals,
-                                            backgroundColor: 'rgba(13, 110, 253, 0.75)',
-                                            borderColor: 'rgba(13, 110, 253, 1)',
+                                            backgroundColor: currentColor,
+                                            borderColor: currentColor,
                                             borderWidth: 1,
                                             borderRadius: 6
                                         }]
