@@ -10,21 +10,33 @@ if (isset($_SESSION['error_msg'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $pin = trim($_POST['pin']);
-    $name = trim($_POST['name']);
-    $institution = trim($_POST['institution']);
+    $pin = trim($_POST['pin'] ?? '');
+    $name = trim($_POST['name'] ?? '');
+    $institution = trim($_POST['institution'] ?? '');
 
+    // Cek keberadaan PIN dan status sesi
     $stmt = $pdo->prepare("SELECT * FROM game_sessions WHERE pin = ? AND status = 'active'");
     $stmt->execute([$pin]);
     $session = $stmt->fetch();
 
     if ($session) {
-        $stmt_resp = $pdo->prepare("INSERT INTO respondents (session_id, name, institution) VALUES (?, ?, ?)");
-        $stmt_resp->execute([$session['id'], $name, $institution]);
-        $respondent_id = $pdo->lastInsertId();
+        // Generate ID unik berupa string uppercase
+        $code2 = time() . '-' . uniqid();
+        $respondent_id = strtoupper($code2);
 
-        header("Location: play?respondent_id=$respondent_id&level=1");
-        exit;
+        try {
+            // Insert respondent dengan memasukkan kolom id string
+            $stmt_resp = $pdo->prepare("INSERT INTO respondents (id, session_id, name, institution, completed_level) VALUES (?, ?, ?, ?, 0)");
+            $stmt_resp->execute([$respondent_id, $session['id'], $name, $institution]);
+
+            // Redirect ke halaman play membawa respondent_id string
+            header("Location: play?respondent_id=" . urlencode($respondent_id) . "&level=1");
+            exit;
+        } catch (PDOException $e) {
+            $_SESSION['error_msg'] = "Gagal mendaftarkan peserta. Silakan coba lagi!";
+            header("Location: index");
+            exit;
+        }
     } else {
         $_SESSION['error_msg'] = "PIN Key tidak valid atau sedang tidak aktif!";
         header("Location: index");
@@ -48,11 +60,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             background: linear-gradient(-45deg, #4a00e0, #8e2de2, #00c6ff, #0072ff);
             background-size: 400% 400%;
             animation: gradientBG 12s ease infinite;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 20px 0;
         }
 
         @keyframes gradientBG {
@@ -96,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <body>
     <div class="container" style="max-width: 450px;">
         <div class="card glass-card border-0 p-4">
-            <img src="logo.png" alt="Logo" class="mx-auto d-block mb-3" style="width: 100px;">
+            <img src="logo.png" alt="Logo" class="mx-auto d-block mb-3" style="width: 100px;" onerror="this.style.display='none'">
             <h3 class="fw-bold text-center mb-1" style="color: #4a00e0;">LEMBAR KERJA PESERTA</h3>
             <p class="text-center text-muted mb-4">PEMANFAATAN FITUR PAPAN INTERAKTIF DIGITAL</p>
 
@@ -109,18 +122,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <label class="form-label fw-semibold text-secondary">Nama Lengkap</label>
                     <input type="text" name="name" class="form-control" required placeholder="Masukkan nama Anda">
                 </div>
-                <div class="mb-4">
+                <div class="mb-3">
                     <label class="form-label fw-semibold text-secondary">Instansi / Sekolah</label>
                     <input type="text" name="institution" class="form-control" required placeholder="Nama Sekolah/Instansi">
                 </div>
-                <div class="mb-3">
+                <div class="mb-4">
                     <label class="form-label fw-semibold text-secondary">PIN Key</label>
-                    <input type="text" name="pin" class="form-control form-control-lg text-center font-monospace fw-bold border-2" required placeholder="123456" style="letter-spacing: 2px;">
+                    <input type="text" name="pin" class="form-control form-control-lg text-center font-monospace fw-bold border-2 text-uppercase" required placeholder="123456" style="letter-spacing: 2px;" autocomplete="off">
                 </div>
                 <button type="submit" class="btn btn-purple w-100 btn-lg fw-bold py-2">Mulai Eksplorasi</button>
             </form>
             <hr class="my-4 text-secondary">
-            <footer class="text-center">BBPMP Provinsi Jawa Timur | <?= date('Y') ?></footer>
+            <footer class="text-center text-muted small">BBPMP Provinsi Jawa Timur | <?= date('Y') ?></footer>
         </div>
     </div>
 </body>

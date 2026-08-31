@@ -24,9 +24,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_pin'])) {
 
     $pin = !empty($custom_pin) ? $custom_pin : str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
 
+    // Generate ID Unik String Uppercase untuk game_sessions
+    $code2 = time() . '-' . uniqid();
+    $session_id = strtoupper($code2);
+
     try {
-        $stmt = $pdo->prepare("INSERT INTO game_sessions (pin, session_name, instrument_type) VALUES (?, ?, ?)");
-        $stmt->execute([$pin, $session_name, $instrument_type]);
+        $stmt = $pdo->prepare("INSERT INTO game_sessions (id, pin, session_name, instrument_type) VALUES (?, ?, ?, ?)");
+        $stmt->execute([$session_id, $pin, $session_name, $instrument_type]);
         header("Location: host?msg=created&pin=" . urlencode($pin));
         exit;
     } catch (PDOException $e) {
@@ -37,16 +41,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_pin'])) {
 
 // Ubah Status Sesi
 if (isset($_GET['toggle_id'])) {
+    $toggle_id = trim($_GET['toggle_id']);
     $stmt = $pdo->prepare("UPDATE game_sessions SET status = IF(status='active', 'inactive', 'active') WHERE id = ?");
-    $stmt->execute([$_GET['toggle_id']]);
+    $stmt->execute([$toggle_id]);
     header("Location: host?msg=toggled");
     exit;
 }
 
 // Hapus Sesi
 if (isset($_GET['delete_id'])) {
+    $delete_id = trim($_GET['delete_id']);
     $stmt = $pdo->prepare("DELETE FROM game_sessions WHERE id = ?");
-    $stmt->execute([(int)$_GET['delete_id']]);
+    $stmt->execute([$delete_id]);
     header("Location: host?msg=deleted");
     exit;
 }
@@ -96,7 +102,6 @@ $no = 1;
     <link rel="apple-touch-icon" href="logo.png">
 
     <style>
-        /* Penyesuaian tampilan DataTables agar selaras dengan tema Bootstrap */
         .dataTables_wrapper .dataTables_paginate .paginate_button {
             padding: 0;
         }
@@ -116,7 +121,7 @@ $no = 1;
     <nav class="navbar navbar-dark bg-dark px-4 mb-4">
         <a class="navbar-brand fw-bold" href="#">Dashboard Host PID</a>
         <div class="d-flex align-items-center gap-3">
-            <span class="text-white">Halo, <strong><?= htmlspecialchars($_SESSION['host_name']) ?></strong></span>
+            <span class="text-white">Halo, <strong><?= htmlspecialchars($_SESSION['host_name'] ?? 'Host') ?></strong></span>
             <a href="/" target="_blank" class="btn btn-success text-white btn-sm">Link Form</a>
             <a href="host?action=logout" class="btn btn-outline-danger btn-sm">Logout</a>
         </div>
@@ -128,7 +133,6 @@ $no = 1;
         <div class="card shadow-sm border-0 p-4 mb-5">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h4 class="fw-bold text-dark mb-0">Daftar Sesi & PIN Key</h4>
-                <!-- Tombol Pemicu Modal -->
                 <button type="button" class="btn btn-success fw-bold" data-bs-toggle="modal" data-bs-target="#createPinModal">
                     + Buat PIN Baru
                 </button>
@@ -162,23 +166,21 @@ $no = 1;
                                 </td>
                                 <td class="text-center text-nowrap">
                                     <div class="btn-group btn-group-sm">
-                                        <!-- Tombol Navigasi ke Halaman Detail -->
-                                        <a href="detail?session_id=<?= $s['id'] ?>" class="btn btn-primary">
+                                        <a href="detail?session_id=<?= urlencode($s['id']) ?>" class="btn btn-primary">
                                             Detail
                                         </a>
 
-                                        <!-- Tombol Buka QR Code spesifik PIN -->
                                         <a href="qrcode?pin=<?= urlencode($s['pin']) ?>" target="_blank" class="btn btn-dark">
                                             QR Code
                                         </a>
 
-                                        <a href="host?toggle_id=<?= $s['id'] ?>" class="btn <?= $s['status'] === 'active' ? 'btn-outline-secondary' : 'btn-outline-success' ?>">
+                                        <a href="host?toggle_id=<?= urlencode($s['id']) ?>" class="btn <?= $s['status'] === 'active' ? 'btn-outline-secondary' : 'btn-outline-success' ?>">
                                             <?= $s['status'] === 'active' ? 'Nonaktifkan' : 'Aktifkan' ?>
                                         </a>
-                                        <a href="leaderboard?session_id=<?= $s['id'] ?>" target="_blank" class="btn btn-info text-white">Leaderboard</a>
+                                        <a href="leaderboard?session_id=<?= urlencode($s['id']) ?>" target="_blank" class="btn btn-info text-white">Leaderboard</a>
 
-                                        <!-- Tombol Hapus dengan SweetAlert2 -->
-                                        <button type="button" class="btn btn-danger" onclick="confirmDelete(<?= $s['id'] ?>, '<?= htmlspecialchars($s['pin']) ?>')">Hapus</button>
+                                        <!-- Tombol Hapus dengan penanganan parameter string ID -->
+                                        <button type="button" class="btn btn-danger" onclick="confirmDelete('<?= htmlspecialchars($s['id']) ?>', '<?= htmlspecialchars($s['pin']) ?>')">Hapus</button>
                                     </div>
                                 </td>
                             </tr>
@@ -228,14 +230,12 @@ $no = 1;
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- DataTables JS & FixedHeader -->
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.datatables.net/fixedheader/3.4.0/js/dataTables.fixedHeader.min.js"></script>
 
     <script>
         $(document).ready(function() {
-            // Inisialisasi DataTables dengan Bahasa Indonesia & Header Static
             var table = $('#hostTable').DataTable({
                 fixedHeader: true,
                 pageLength: 10,
@@ -257,7 +257,6 @@ $no = 1;
             });
         });
 
-        // Konfigurasi dasar SweetAlert2 Toast
         const Toast = Swal.mixin({
             toast: true,
             position: 'top-end',
@@ -270,12 +269,10 @@ $no = 1;
             }
         });
 
-        // Hapus query parameter dari URL setelah halaman termuat
         if (window.location.search.includes('msg=')) {
             window.history.replaceState({}, document.title, window.location.pathname);
         }
 
-        // Tampilkan Toast jika ada notifikasi dari PHP
         <?php if ($toast_status && $toast_message): ?>
             Toast.fire({
                 icon: '<?= $toast_status ?>',
@@ -283,7 +280,7 @@ $no = 1;
             });
         <?php endif; ?>
 
-        // Confirm Dialog sebelum Hapus
+        // Parameter ID dikirim sebagai string ke JavaScript
         function confirmDelete(id, pin) {
             Swal.fire({
                 title: 'Apakah Anda yakin?',
@@ -297,7 +294,7 @@ $no = 1;
                 reverseButtons: true
             }).then((result) => {
                 if (result.isConfirmed) {
-                    window.location.href = `host?delete_id=${id}`;
+                    window.location.href = `host?delete_id=${encodeURIComponent(id)}`;
                 }
             });
         }

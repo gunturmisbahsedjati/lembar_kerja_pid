@@ -8,7 +8,13 @@ if (!isset($_SESSION['host_logged_in'])) {
     exit;
 }
 
-$session_id = (int)($_GET['session_id'] ?? 0);
+// PERBAIKAN 1: Ambil session_id sebagai STRING (hapus casting (int))
+$session_id = isset($_GET['session_id']) ? trim($_GET['session_id']) : '';
+
+if (empty($session_id)) {
+    header("Location: host");
+    exit;
+}
 
 // Ambil Informasi Sesi / PIN
 $stmt_session = $pdo->prepare("SELECT * FROM game_sessions WHERE id = ?");
@@ -105,11 +111,11 @@ if (isset($_GET['action']) && $_GET['action'] === 'export_excel') {
     exit;
 }
 
-// Proses Hapus Peserta & Jawabannya
+// PERBAIKAN 2: Proses Hapus Peserta & Jawabannya (Gunakan String ID)
 if (isset($_GET['action']) && $_GET['action'] === 'delete_respondent') {
-    $respondent_id = (int)($_GET['respondent_id'] ?? 0);
+    $respondent_id = isset($_GET['respondent_id']) ? trim($_GET['respondent_id']) : '';
 
-    if ($respondent_id > 0) {
+    if (!empty($respondent_id)) {
         $pdo->beginTransaction();
         try {
             // Hapus jawaban peserta
@@ -121,11 +127,11 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete_respondent') {
             $stmt_del_resp->execute([$respondent_id, $session_id]);
 
             $pdo->commit();
-            header("Location: detail?session_id=" . $session_id . "&msg=deleted");
+            header("Location: detail?session_id=" . urlencode($session_id) . "&msg=deleted");
             exit;
         } catch (Exception $e) {
             $pdo->rollBack();
-            header("Location: detail?session_id=" . $session_id . "&msg=error");
+            header("Location: detail?session_id=" . urlencode($session_id) . "&msg=error");
             exit;
         }
     }
@@ -142,10 +148,10 @@ if (isset($_GET['msg'])) {
     }
 }
 
-// Endpoint AJAX: Mengambil Detail Pertanyaan & Jawaban Khusus Instrumen Peserta
+// PERBAIKAN 3: Endpoint AJAX get_answers (Gunakan String ID)
 if (isset($_GET['api']) && $_GET['api'] === 'get_answers') {
     header('Content-Type: application/json');
-    $respondent_id = (int)($_GET['respondent_id'] ?? 0);
+    $respondent_id = isset($_GET['respondent_id']) ? trim($_GET['respondent_id']) : '';
 
     $stmt_ans = $pdo->prepare("
         SELECT 
@@ -202,7 +208,6 @@ $no = 1;
     <link rel="apple-touch-icon" href="logo.png">
 
     <style>
-        /* Penyesuaian tampilan DataTables agar selaras dengan tema Bootstrap */
         .dataTables_wrapper .dataTables_paginate .paginate_button {
             padding: 0;
         }
@@ -248,10 +253,10 @@ $no = 1;
                 <h4 class="fw-bold text-dark mb-0">Daftar Peserta (<?= count($respondents) ?>)</h4>
                 <div>
                     <!-- Tombol Export Excel -->
-                    <a href="detail?session_id=<?= $session['id'] ?>&action=export_excel" class="btn btn-success btn-sm me-2 fw-bold">
+                    <a href="detail?session_id=<?= urlencode($session['id']) ?>&action=export_excel" class="btn btn-success btn-sm me-2 fw-bold">
                         📊 Cetak Excel
                     </a>
-                    <a href="leaderboard?session_id=<?= $session['id'] ?>" target="_blank" class="btn btn-outline-info btn-sm">Lihat Leaderboard</a>
+                    <a href="leaderboard?session_id=<?= urlencode($session['id']) ?>" target="_blank" class="btn btn-outline-info btn-sm">Lihat Leaderboard</a>
                 </div>
             </div>
 
@@ -281,12 +286,11 @@ $no = 1;
                                 <td><?= date('d M Y H:i', strtotime($r['created_at'])) ?></td>
                                 <td class="text-center text-nowrap">
                                     <div class="btn-group btn-group-sm">
-                                        <!-- Tombol Detail Jawaban (Modal) -->
-                                        <button type="button" class="btn btn-info text-white fw-bold" onclick="showAnswersModal(<?= $r['id'] ?>, '<?= htmlspecialchars(addslashes($r['name'])) ?>')">
+                                        <!-- PERBAIKAN 4: Kirim r['id'] sebagai String ke JavaScript -->
+                                        <button type="button" class="btn btn-info text-white fw-bold" onclick="showAnswersModal('<?= htmlspecialchars(addslashes($r['id'])) ?>', '<?= htmlspecialchars(addslashes($r['name'])) ?>')">
                                             Detail
                                         </button>
-                                        <!-- Tombol Hapus Peserta -->
-                                        <button type="button" class="btn btn-danger fw-bold" onclick="confirmDelete(<?= $r['id'] ?>, '<?= htmlspecialchars(addslashes($r['name'])) ?>')">
+                                        <button type="button" class="btn btn-danger fw-bold" onclick="confirmDelete('<?= htmlspecialchars(addslashes($r['id'])) ?>', '<?= htmlspecialchars(addslashes($r['name'])) ?>')">
                                             Hapus
                                         </button>
                                     </div>
@@ -348,7 +352,6 @@ $no = 1;
         const answersModal = new bootstrap.Modal(document.getElementById('answersModal'));
 
         $(document).ready(function() {
-            // Inisialisasi DataTables dengan Bahasa Indonesia & Header Static
             var table = $('#detailTable').DataTable({
                 fixedHeader: true,
                 pageLength: 10,
@@ -370,7 +373,6 @@ $no = 1;
             });
         });
 
-        // Konfigurasi dasar SweetAlert2 Toast
         const Toast = Swal.mixin({
             toast: true,
             position: 'top-end',
@@ -383,14 +385,12 @@ $no = 1;
             }
         });
 
-        // Hapus query parameter msg dari URL setelah halaman dimuat
         if (window.location.search.includes('msg=')) {
             const url = new URL(window.location.href);
             url.searchParams.delete('msg');
             window.history.replaceState({}, document.title, url.toString());
         }
 
-        // Tampilkan Toast jika ada notifikasi dari PHP
         <?php if ($toast_status && $toast_message): ?>
             Toast.fire({
                 icon: '<?= $toast_status ?>',
@@ -398,7 +398,7 @@ $no = 1;
             });
         <?php endif; ?>
 
-        // Tampilkan Pop-Up Modal Detail Pertanyaan & Jawaban Peserta
+        // PERBAIKAN 5: URL Encoding untuk Fetch AJAX Modal
         function showAnswersModal(respondentId, respondentName) {
             document.getElementById('modalTitle').textContent = `Detail Jawaban: ${respondentName}`;
             document.getElementById('modalLoading').classList.remove('d-none');
@@ -406,7 +406,10 @@ $no = 1;
 
             answersModal.show();
 
-            fetch(`detail?session_id=<?= $session_id ?>&api=get_answers&respondent_id=${respondentId}`)
+            const sessionId = encodeURIComponent('<?= $session_id ?>');
+            const respId = encodeURIComponent(respondentId);
+
+            fetch(`detail?session_id=${sessionId}&api=get_answers&respondent_id=${respId}`)
                 .then(res => res.json())
                 .then(data => {
                     const tbody = document.getElementById('modalAnswersBody');
@@ -442,7 +445,7 @@ $no = 1;
                 });
         }
 
-        // Konfirmasi Hapus Peserta
+        // PERBAIKAN 6: URL Encoding untuk Redirection Hapus
         function confirmDelete(respondentId, respondentName) {
             Swal.fire({
                 title: 'Hapus Peserta?',
@@ -456,7 +459,9 @@ $no = 1;
                 reverseButtons: true
             }).then((result) => {
                 if (result.isConfirmed) {
-                    window.location.href = `detail?session_id=<?= $session_id ?>&action=delete_respondent&respondent_id=${respondentId}`;
+                    const sessionId = encodeURIComponent('<?= $session_id ?>');
+                    const respId = encodeURIComponent(respondentId);
+                    window.location.href = `detail?session_id=${sessionId}&action=delete_respondent&respondent_id=${respId}`;
                 }
             });
         }
