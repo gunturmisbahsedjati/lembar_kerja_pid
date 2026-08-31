@@ -13,7 +13,8 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
     exit;
 }
 
-$message = '';
+$toast_status = null;
+$toast_message = '';
 
 // Buat PIN Key Baru
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_pin'])) {
@@ -38,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_pin'])) {
 if (isset($_GET['toggle_id'])) {
     $stmt = $pdo->prepare("UPDATE game_sessions SET status = IF(status='active', 'inactive', 'active') WHERE id = ?");
     $stmt->execute([$_GET['toggle_id']]);
-    header("Location: host");
+    header("Location: host?msg=toggled");
     exit;
 }
 
@@ -50,13 +51,20 @@ if (isset($_GET['delete_id'])) {
     exit;
 }
 
+// Cek Notifikasi Pesan
 if (isset($_GET['msg'])) {
     if ($_GET['msg'] === 'created' && isset($_GET['pin'])) {
-        $message = "PIN Key <strong>" . htmlspecialchars($_GET['pin']) . "</strong> berhasil dibuat!";
+        $toast_status = 'success';
+        $toast_message = "PIN Key " . htmlspecialchars($_GET['pin']) . " berhasil dibuat!";
     } elseif ($_GET['msg'] === 'error') {
-        $message = "Gagal membuat PIN. PIN Key mungkin sudah digunakan.";
+        $toast_status = 'error';
+        $toast_message = "Gagal membuat PIN. PIN Key mungkin sudah digunakan.";
+    } elseif ($_GET['msg'] === 'toggled') {
+        $toast_status = 'success';
+        $toast_message = "Status PIN berhasil diubah!";
     } elseif ($_GET['msg'] === 'deleted') {
-        $message = "PIN Key dan seluruh data terkait berhasil dihapus!";
+        $toast_status = 'success';
+        $toast_message = "PIN Key berhasil dihapus!";
     }
 }
 
@@ -75,6 +83,8 @@ $sessions = $pdo->query("
     <meta charset="UTF-8">
     <title>Dashboard Host - Kelola PIN Key</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- SweetAlert2 CSS & JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="icon" type="image/x-icon" href="logo.png" />
     <link rel="apple-touch-icon" href="logo.png">
 </head>
@@ -90,9 +100,6 @@ $sessions = $pdo->query("
     </nav>
 
     <div class="container" style="max-width: 1050px;">
-        <?php if ($message): ?>
-            <div class="alert alert-info alert-dismissible fade show"><?= $message ?><button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>
-        <?php endif; ?>
 
         <!-- Form Buat PIN -->
         <div class="card shadow-sm border-0 mb-4 p-4">
@@ -167,7 +174,9 @@ $sessions = $pdo->query("
                                                 <?= $s['status'] === 'active' ? 'Nonaktifkan' : 'Aktifkan' ?>
                                             </a>
                                             <a href="leaderboard?session_id=<?= $s['id'] ?>" target="_blank" class="btn btn-info text-white">Leaderboard</a>
-                                            <a href="host?delete_id=<?= $s['id'] ?>" class="btn btn-danger" onclick="return confirm('Hapus PIN <?= htmlspecialchars($s['pin']) ?>?');">Hapus</a>
+
+                                            <!-- Tombol Hapus dengan SweetAlert2 -->
+                                            <button type="button" class="btn btn-danger" onclick="confirmDelete(<?= $s['id'] ?>, '<?= htmlspecialchars($s['pin']) ?>')">Hapus</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -178,6 +187,53 @@ $sessions = $pdo->query("
             </div>
         </div>
     </div>
+
+    <script>
+        // Konfigurasi dasar SweetAlert2 Toast
+        const Toast = Swal.mixin({
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+            timerProgressBar: true,
+            didOpen: (toast) => {
+                toast.addEventListener('mouseenter', Swal.stopTimer);
+                toast.addEventListener('mouseleave', Swal.resumeTimer);
+            }
+        });
+
+        // Hapus query parameter dari URL setelah halaman termuat
+        if (window.location.search.includes('msg=')) {
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+
+        // Tampilkan Toast jika ada notifikasi dari PHP
+        <?php if ($toast_status && $toast_message): ?>
+            Toast.fire({
+                icon: '<?= $toast_status ?>',
+                title: '<?= $toast_message ?>'
+            });
+        <?php endif; ?>
+
+        // Confirm Dialog sebelum Hapus
+        function confirmDelete(id, pin) {
+            Swal.fire({
+                title: 'Apakah Anda yakin?',
+                text: `PIN ${pin} dan seluruh data terkait akan dihapus secara permanen!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = `host?delete_id=${id}`;
+                }
+            });
+        }
+    </script>
 </body>
 
 </html>
