@@ -163,10 +163,10 @@ $overall_percentage = $grand_total_features > 0
         </div>
         <!-- Area Konten Utama yang Akan Dicetak PDF -->
         <div id="printArea">
-            <div class="d-flex align-items-center pdf-only justify-content-center">
-                <img src="logo.png" alt="Logo" width="75" height="75" class="me-3">
+            <div class="d-flex align-items-center justify-content-center">
+                <img src="logo.png" alt="Logo" width="75" height="75" class="me-3 pdf-only">
                 <div class="text-center">
-                    <h3 class="fw-bold mb-0">Hasil Evaluasi Penguasaan PID<br>BBPMP Provinsi Jawa Timur</h3>
+                    <h3 class="fw-bold mb-0 pdf-only">Hasil Evaluasi Penguasaan PID<br>BBPMP Provinsi Jawa Timur</h3>
                     <!-- <small class="text-muted">BBPMP Provinsi Jawa Timur</small> -->
                 </div>
             </div>
