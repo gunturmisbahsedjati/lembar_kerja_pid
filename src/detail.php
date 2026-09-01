@@ -2,13 +2,14 @@
 session_start();
 require 'config.php';
 
-// Proteksi Halaman Host
-if (!isset($_SESSION['host_logged_in'])) {
+// Proteksi Sesi Login
+if (!isset($_SESSION['role'])) {
     header("Location: login");
     exit;
 }
 
-// PERBAIKAN 1: Ambil session_id sebagai STRING (hapus casting (int))
+$user_role  = $_SESSION['role'];
+$user_id    = $_SESSION['user_id'];
 $session_id = isset($_GET['session_id']) ? trim($_GET['session_id']) : '';
 
 if (empty($session_id)) {
@@ -16,9 +17,15 @@ if (empty($session_id)) {
     exit;
 }
 
-// Ambil Informasi Sesi / PIN
-$stmt_session = $pdo->prepare("SELECT * FROM game_sessions WHERE id = ?");
-$stmt_session->execute([$session_id]);
+// Ambil Informasi Sesi Berdasarkan Role
+if ($user_role === 'admin') {
+    $stmt_session = $pdo->prepare("SELECT * FROM game_sessions WHERE id = ?");
+    $stmt_session->execute([$session_id]);
+} else {
+    $stmt_session = $pdo->prepare("SELECT * FROM game_sessions WHERE id = ? AND host_id = ?");
+    $stmt_session->execute([$session_id, $user_id]);
+}
+
 $session = $stmt_session->fetch();
 
 if (!$session) {
@@ -26,14 +33,8 @@ if (!$session) {
     exit;
 }
 
-$toast_status = null;
-$toast_message = '';
-
-// ==========================================
-// FITUR EXPORT EXCEL
-// ==========================================
+// Fitur Export Excel
 if (isset($_GET['action']) && $_GET['action'] === 'export_excel') {
-    // Ambil semua daftar pertanyaan/fitur sesuai instrumen sesi
     $stmt_features = $pdo->prepare("
         SELECT f.id, f.feature_name, l.level_name 
         FROM features f
@@ -44,7 +45,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'export_excel') {
     $stmt_features->execute([$session['instrument_type']]);
     $features = $stmt_features->fetchAll(PDO::FETCH_ASSOC);
 
-    // Ambil semua peserta di sesi ini
     $stmt_resp = $pdo->prepare("
         SELECT id, name, institution, completed_level, created_at 
         FROM respondents 
@@ -54,7 +54,6 @@ if (isset($_GET['action']) && $_GET['action'] === 'export_excel') {
     $stmt_resp->execute([$session_id]);
     $respondents_data = $stmt_resp->fetchAll(PDO::FETCH_ASSOC);
 
-    // Ambil seluruh jawaban peserta
     $stmt_all_ans = $pdo->prepare("
         SELECT a.respondent_id, a.feature_id, a.status 
         FROM answers a
@@ -64,42 +63,24 @@ if (isset($_GET['action']) && $_GET['action'] === 'export_excel') {
     $stmt_all_ans->execute([$session_id]);
     $raw_answers = $stmt_all_ans->fetchAll(PDO::FETCH_ASSOC);
 
-    // Mapping jawaban [respondent_id][feature_id] = status
     $answers_map = [];
     foreach ($raw_answers as $ans) {
         $answers_map[$ans['respondent_id']][$ans['feature_id']] = $ans['status'];
     }
 
-    // Set Header untuk Download File Excel (.xls)
     $filename = "Data_Peserta_PIN_" . $session['pin'] . "_" . date('Ymd_His') . ".xls";
     header("Content-Type: application/vnd.ms-excel; charset=utf-8");
     header("Content-Disposition: attachment; filename=\"$filename\"");
-    header("Pragma: no-cache");
-    header("Expires: 0");
 
-    echo "<table border='1'>";
-    echo "<tr style='background-color:#0d6efd; color:#ffffff; font-weight:bold;'>";
-    echo "<th>No</th>";
-    echo "<th>Nama Peserta</th>";
-    echo "<th>Instansi / Sekolah</th>";
-    echo "<th>Level Selesai</th>";
-    echo "<th>Waktu Bergabung</th>";
-
-    // Header Kolom Pertanyaan
+    echo "<table border='1'><tr style='background-color:#0d6efd; color:#ffffff;'>";
+    echo "<th>No</th><th>Nama Peserta</th><th>Instansi / Sekolah</th><th>Level Selesai</th><th>Waktu Bergabung</th>";
     foreach ($features as $f) {
         echo "<th>[" . htmlspecialchars($f['level_name']) . "] " . htmlspecialchars($f['feature_name']) . "</th>";
     }
     echo "</tr>";
 
-    // Baris Data Peserta & Jawabannya
     foreach ($respondents_data as $idx => $resp) {
-        echo "<tr>";
-        echo "<td>" . ($idx + 1) . "</td>";
-        echo "<td>" . htmlspecialchars($resp['name']) . "</td>";
-        echo "<td>" . htmlspecialchars($resp['institution']) . "</td>";
-        echo "<td>Level " . $resp['completed_level'] . "</td>";
-        echo "<td>" . date('d M Y H:i', strtotime($resp['created_at'])) . "</td>";
-
+        echo "<tr><td>" . ($idx + 1) . "</td><td>" . htmlspecialchars($resp['name']) . "</td><td>" . htmlspecialchars($resp['institution']) . "</td><td>Level " . $resp['completed_level'] . "</td><td>" . date('d M Y H:i', strtotime($resp['created_at'])) . "</td>";
         foreach ($features as $f) {
             $status = $answers_map[$resp['id']][$f['id']] ?? 'Belum';
             $bgColor = ($status === 'Sudah') ? '#d1e7dd' : '#f8d7da';
@@ -111,18 +92,16 @@ if (isset($_GET['action']) && $_GET['action'] === 'export_excel') {
     exit;
 }
 
-// PERBAIKAN 2: Proses Hapus Peserta & Jawabannya (Gunakan String ID)
+// Hapus Peserta
 if (isset($_GET['action']) && $_GET['action'] === 'delete_respondent') {
     $respondent_id = isset($_GET['respondent_id']) ? trim($_GET['respondent_id']) : '';
 
     if (!empty($respondent_id)) {
         $pdo->beginTransaction();
         try {
-            // Hapus jawaban peserta
             $stmt_del_ans = $pdo->prepare("DELETE FROM answers WHERE respondent_id = ?");
             $stmt_del_ans->execute([$respondent_id]);
 
-            // Hapus peserta
             $stmt_del_resp = $pdo->prepare("DELETE FROM respondents WHERE id = ? AND session_id = ?");
             $stmt_del_resp->execute([$respondent_id, $session_id]);
 
@@ -137,18 +116,7 @@ if (isset($_GET['action']) && $_GET['action'] === 'delete_respondent') {
     }
 }
 
-// Cek Notifikasi Pesan untuk Toast
-if (isset($_GET['msg'])) {
-    if ($_GET['msg'] === 'deleted') {
-        $toast_status = 'success';
-        $toast_message = 'Peserta dan seluruh jawabannya berhasil dihapus!';
-    } elseif ($_GET['msg'] === 'error') {
-        $toast_status = 'error';
-        $toast_message = 'Gagal menghapus data peserta.';
-    }
-}
-
-// PERBAIKAN 3: Endpoint AJAX get_answers (Gunakan String ID)
+// Endpoint AJAX Jawaban Peserta
 if (isset($_GET['api']) && $_GET['api'] === 'get_answers') {
     header('Content-Type: application/json');
     $respondent_id = isset($_GET['respondent_id']) ? trim($_GET['respondent_id']) : '';
@@ -168,13 +136,11 @@ if (isset($_GET['api']) && $_GET['api'] === 'get_answers') {
         ORDER BY l.level_order ASC, f.id ASC
     ");
     $stmt_ans->execute([$respondent_id]);
-    $answers_detail = $stmt_ans->fetchAll(PDO::FETCH_ASSOC);
-
-    echo json_encode($answers_detail);
+    echo json_encode($stmt_ans->fetchAll(PDO::FETCH_ASSOC));
     exit;
 }
 
-// Ambil Seluruh Responden pada Sesi Ini
+// Fetch Responden Sesi Ini
 $stmt_respondents = $pdo->prepare("
     SELECT r.*, 
            COUNT(a.id) as total_answers,
@@ -208,39 +174,21 @@ $no = 1;
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="icon" type="image/x-icon" href="logo.png" />
     <link rel="apple-touch-icon" href="logo.png">
-
-    <style>
-        .dataTables_wrapper .dataTables_paginate .paginate_button {
-            padding: 0;
-        }
-
-        div.dataTables_wrapper div.dataTables_filter {
-            margin-bottom: 15px;
-        }
-
-        table.dataTable thead tr th {
-            background-color: #212529 !important;
-            color: #ffffff !important;
-        }
-    </style>
 </head>
 
 <body class="bg-light">
     <nav class="navbar navbar-dark bg-dark px-4 mb-4">
         <a class="navbar-brand fw-bold" href="host">← Kembali ke Dashboard Host</a>
-        <span class="text-white">Detail Responden</span>
+        <span class="text-white">Detail Responden (<?= ucfirst($user_role) ?>)</span>
     </nav>
 
     <div class="container" style="max-width: 1100px;">
-
-        <!-- Header Ringkasan Sesi -->
         <div class="card shadow-sm border-0 mb-4 p-4">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
                     <h3 class="fw-bold text-primary mb-1"><?= htmlspecialchars($session['session_name']) ?></h3>
                     <p class="text-muted mb-0">
-                        Instrumen: <strong><?= str_replace('_', ' ', $session['instrument_type']) ?></strong> |
-                        Dibuat: <strong><?= date('d M Y H:i', strtotime($session['created_at'])) ?></strong>
+                        Instrumen: <strong><?= str_replace('_', ' ', $session['instrument_type']) ?></strong>
                     </p>
                 </div>
                 <div>
@@ -249,15 +197,11 @@ $no = 1;
             </div>
         </div>
 
-        <!-- Tabel Daftar Responden -->
         <div class="card shadow-sm border-0 p-4 mb-5">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h4 class="fw-bold text-dark mb-0">Daftar Peserta (<?= count($respondents) ?>)</h4>
                 <div>
-                    <!-- Tombol Export Excel -->
-                    <a href="detail?session_id=<?= urlencode($session['id']) ?>&action=export_excel" class="btn btn-success btn-sm me-2 fw-bold">
-                        📊 Cetak Excel
-                    </a>
+                    <a href="detail?session_id=<?= urlencode($session['id']) ?>&action=export_excel" class="btn btn-success btn-sm me-2 fw-bold">📊 Cetak Excel</a>
                     <a href="leaderboard?session_id=<?= urlencode($session['id']) ?>" target="_blank" class="btn btn-outline-info btn-sm">Lihat Leaderboard</a>
                 </div>
             </div>
@@ -282,22 +226,13 @@ $no = 1;
                                 <td><strong><?= htmlspecialchars($r['name']) ?></strong></td>
                                 <td><?= htmlspecialchars($r['institution']) ?></td>
                                 <td><span class="badge bg-success fs-6">Level <?= $r['completed_level'] ?></span></td>
-                                <td>
-                                    <span class="badge bg-primary fs-6"><?= $r['total_sudah'] ?> Fitur</span>
-                                </td>
+                                <td><span class="badge bg-primary fs-6"><?= $r['total_sudah'] ?> Fitur</span></td>
                                 <td><?= date('d M Y H:i', strtotime($r['created_at'])) ?></td>
                                 <td class="text-center text-nowrap">
                                     <div class="btn-group btn-group-sm">
-                                        <!-- PERBAIKAN 4: Kirim r['id'] sebagai String ke JavaScript -->
-                                        <a href="result?respondent_id=<?= $r['id'] ?>" class="btn btn-success fw-bold" target="_blank">
-                                            Hasil
-                                        </a>
-                                        <button type="button" class="btn btn-info text-white fw-bold" onclick="showAnswersModal('<?= htmlspecialchars(addslashes($r['id'])) ?>', '<?= htmlspecialchars(addslashes($r['name'])) ?>')">
-                                            Detail
-                                        </button>
-                                        <button type="button" class="btn btn-danger fw-bold" onclick="confirmDelete('<?= htmlspecialchars(addslashes($r['id'])) ?>', '<?= htmlspecialchars(addslashes($r['name'])) ?>')">
-                                            Hapus
-                                        </button>
+                                        <a href="result?respondent_id=<?= $r['id'] ?>" class="btn btn-success fw-bold" target="_blank">Hasil</a>
+                                        <button type="button" class="btn btn-info text-white fw-bold" onclick="showAnswersModal('<?= htmlspecialchars(addslashes($r['id'])) ?>', '<?= htmlspecialchars(addslashes($r['name'])) ?>')">Detail</button>
+                                        <button type="button" class="btn btn-danger fw-bold" onclick="confirmDelete('<?= htmlspecialchars(addslashes($r['id'])) ?>', '<?= htmlspecialchars(addslashes($r['name'])) ?>')">Hapus</button>
                                     </div>
                                 </td>
                             </tr>
@@ -308,37 +243,30 @@ $no = 1;
         </div>
     </div>
 
-    <!-- Modal Pop-Up Detail Pertanyaan & Jawaban Peserta -->
-    <div class="modal fade" data-bs-backdrop="static" id="answersModal" tabindex="-1" aria-hidden="true">
+    <!-- Modal Detail Jawaban -->
+    <div class="modal fade" id="answersModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-scrollable">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
-                    <div>
-                        <h5 class="modal-title fw-bold" id="modalTitle">Detail Jawaban Peserta</h5>
-                        <small class="text-white-50" id="modalSubTitle">Kategori Instrumen: <?= str_replace('_', ' ', $session['instrument_type']) ?></small>
-                    </div>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <h5 class="modal-title fw-bold" id="modalTitle">Detail Jawaban Peserta</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div id="modalLoading" class="text-center py-4">
                         <div class="spinner-border text-primary" role="status"></div>
-                        <p class="mt-2 text-muted">Memuat pertanyaan dan jawaban...</p>
                     </div>
                     <div class="table-responsive d-none" id="modalTableWrapper">
                         <table class="table table-bordered table-striped align-middle">
                             <thead class="table-light">
                                 <tr>
-                                    <th style="width: 20%;">Level</th>
-                                    <th style="width: 65%;">Pertanyaan / Fitur Instrumen</th>
-                                    <th style="width: 15%;" class="text-center">Status</th>
+                                    <th>Level</th>
+                                    <th>Pertanyaan / Fitur</th>
+                                    <th class="text-center">Status</th>
                                 </tr>
                             </thead>
                             <tbody id="modalAnswersBody"></tbody>
                         </table>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
                 </div>
             </div>
         </div>

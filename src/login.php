@@ -4,7 +4,8 @@ require 'config.php';
 
 $error = '';
 
-if (isset($_SESSION['host_logged_in'])) {
+// Pengecekan status login berdasarkan role
+if (isset($_SESSION['role'])) {
     header("Location: host");
     exit;
 }
@@ -13,16 +14,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username']);
     $password = trim($_POST['password']);
 
+    // Query ke tabel users berdasarkan username
     $stmt = $pdo->prepare("SELECT * FROM users WHERE username = ?");
     $stmt->execute([$username]);
     $user = $stmt->fetch();
 
-    // Hanya gunakan password_verify dari database
+    // Tambahkan pengecekan $user['status']
     if ($user && password_verify($password, $user['password'])) {
-        $_SESSION['host_logged_in'] = true;
-        $_SESSION['host_name'] = $user['name'];
-        header("Location: host");
-        exit;
+        if ($user['status'] !== 'active') {
+            $error = 'Akun Anda sedang dinonaktifkan oleh Admin!';
+        } else {
+            $_SESSION['role']      = $user['role'];
+            $_SESSION['user_id']   = $user['id'];
+            $_SESSION['user_name'] = $user['name'];
+            header("Location: host");
+            exit;
+        }
     } else {
         $error = 'Username atau Password salah!';
     }

@@ -2,10 +2,14 @@
 session_start();
 require 'config.php';
 
-if (!isset($_SESSION['host_logged_in'])) {
+// Proteksi Sesi Login
+if (!isset($_SESSION['role'])) {
     header("Location: login");
     exit;
 }
+
+$user_role = $_SESSION['role'];
+$user_id   = $_SESSION['user_id'];
 
 if (isset($_GET['action']) && $_GET['action'] === 'logout') {
     session_destroy();
@@ -18,19 +22,19 @@ $toast_message = '';
 
 // Buat PIN Key Baru
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_pin'])) {
-    $session_name = trim($_POST['session_name']);
+    $session_name    = trim($_POST['session_name']);
     $instrument_type = trim($_POST['instrument_type']);
-    $custom_pin = trim($_POST['custom_pin']);
+    $custom_pin      = trim($_POST['custom_pin']);
 
     $pin = !empty($custom_pin) ? $custom_pin : str_pad(rand(0, 999999), 6, '0', STR_PAD_LEFT);
 
-    // Generate ID Unik String Uppercase untuk game_sessions
+    // Format ID sesuai instruksi
     $code2 = time() . '-' . uniqid();
     $session_id = strtoupper($code2);
 
     try {
-        $stmt = $pdo->prepare("INSERT INTO game_sessions (id, pin, session_name, instrument_type) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$session_id, $pin, $session_name, $instrument_type]);
+        $stmt = $pdo->prepare("INSERT INTO game_sessions (id, host_id, pin, session_name, instrument_type) VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([$session_id, $user_id, $pin, $session_name, $instrument_type]);
         header("Location: host?msg=created&pin=" . urlencode($pin));
         exit;
     } catch (PDOException $e) {
@@ -42,8 +46,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_pin'])) {
 // Ubah Status Sesi
 if (isset($_GET['toggle_id'])) {
     $toggle_id = trim($_GET['toggle_id']);
-    $stmt = $pdo->prepare("UPDATE game_sessions SET status = IF(status='active', 'inactive', 'active') WHERE id = ?");
-    $stmt->execute([$toggle_id]);
+
+    if ($user_role === 'admin') {
+        $stmt = $pdo->prepare("UPDATE game_sessions SET status = IF(status='active', 'inactive', 'active') WHERE id = ?");
+        $stmt->execute([$toggle_id]);
+    } else {
+        $stmt = $pdo->prepare("UPDATE game_sessions SET status = IF(status='active', 'inactive', 'active') WHERE id = ? AND host_id = ?");
+        $stmt->execute([$toggle_id, $user_id]);
+    }
+
     header("Location: host?msg=toggled");
     exit;
 }
@@ -51,13 +62,20 @@ if (isset($_GET['toggle_id'])) {
 // Hapus Sesi
 if (isset($_GET['delete_id'])) {
     $delete_id = trim($_GET['delete_id']);
-    $stmt = $pdo->prepare("DELETE FROM game_sessions WHERE id = ?");
-    $stmt->execute([$delete_id]);
+
+    if ($user_role === 'admin') {
+        $stmt = $pdo->prepare("DELETE FROM game_sessions WHERE id = ?");
+        $stmt->execute([$delete_id]);
+    } else {
+        $stmt = $pdo->prepare("DELETE FROM game_sessions WHERE id = ? AND host_id = ?");
+        $stmt->execute([$delete_id, $user_id]);
+    }
+
     header("Location: host?msg=deleted");
     exit;
 }
 
-// Cek Notifikasi Pesan
+// Notifikasi Toast
 if (isset($_GET['msg'])) {
     if ($_GET['msg'] === 'created' && isset($_GET['pin'])) {
         $toast_status = 'success';
@@ -74,13 +92,28 @@ if (isset($_GET['msg'])) {
     }
 }
 
-$sessions = $pdo->query("
-    SELECT s.*, COUNT(r.id) as total_respondents 
-    FROM game_sessions s 
-    LEFT JOIN respondents r ON r.session_id = s.id 
-    GROUP BY s.id 
-    ORDER BY s.status ASC, s.created_at DESC
-")->fetchAll();
+// Query Data Berdasarkan Role User
+if ($user_role === 'admin') {
+    $stmt = $pdo->query("
+        SELECT s.*, u.name as host_name, COUNT(r.id) as total_respondents 
+        FROM game_sessions s 
+        LEFT JOIN users u ON u.id = s.host_id
+        LEFT JOIN respondents r ON r.session_id = s.id 
+        GROUP BY s.id 
+        ORDER BY s.status ASC, s.created_at DESC
+    ");
+} else {
+    $stmt = $pdo->prepare("
+        SELECT s.*, COUNT(r.id) as total_respondents 
+        FROM game_sessions s 
+        LEFT JOIN respondents r ON r.session_id = s.id 
+        WHERE s.host_id = ?
+        GROUP BY s.id 
+        ORDER BY s.status ASC, s.created_at DESC
+    ");
+    $stmt->execute([$user_id]);
+}
+$sessions = $stmt->fetchAll();
 $no = 1;
 ?>
 <!DOCTYPE html>
@@ -88,7 +121,7 @@ $no = 1;
 
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard Host - Kelola PIN Key</title>
+    <title>Dashboard Sesi - <?= ucfirst($user_role) ?></title>
     <meta name="author" content="Arghavan Barra Al Misbah" />
     <meta name="language" content="Indonesia" />
     <!-- Bootstrap 5 CSS -->
@@ -102,36 +135,20 @@ $no = 1;
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="icon" type="image/x-icon" href="logo.png" />
     <link rel="apple-touch-icon" href="logo.png">
-
-    <style>
-        .dataTables_wrapper .dataTables_paginate .paginate_button {
-            padding: 0;
-        }
-
-        div.dataTables_wrapper div.dataTables_filter {
-            margin-bottom: 15px;
-        }
-
-        table.dataTable thead tr th {
-            background-color: #212529 !important;
-            color: #ffffff !important;
-        }
-    </style>
 </head>
 
 <body class="bg-light">
     <nav class="navbar navbar-dark bg-dark px-4 mb-4">
-        <a class="navbar-brand fw-bold" href="#">Dashboard Host PID</a>
+        <a class="navbar-brand fw-bold" href="#">Dashboard <?= ucfirst($user_role) ?></a>
         <div class="d-flex align-items-center gap-3">
-            <span class="text-white">Halo, <strong><?= htmlspecialchars($_SESSION['host_name'] ?? 'Host') ?></strong></span>
+            <span class="text-white">Halo, <strong><?= htmlspecialchars($_SESSION['user_name']) ?></strong> (<?= strtoupper($user_role) ?>)</span>
+            <a href="users" class="btn btn-info text-white btn-sm">HOST</a>
             <a href="/" target="_blank" class="btn btn-success text-white btn-sm">Link Form</a>
             <a href="host?action=logout" class="btn btn-outline-danger btn-sm">Logout</a>
         </div>
     </nav>
 
     <div class="container" style="max-width: 1100px;">
-
-        <!-- Tabel Daftar Sesi PIN dengan DataTables -->
         <div class="card shadow-sm border-0 p-4 mb-5">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <h4 class="fw-bold text-dark mb-0">Daftar Sesi & PIN Key</h4>
@@ -147,6 +164,9 @@ $no = 1;
                             <th>No.</th>
                             <th>PIN Key</th>
                             <th>Nama Sesi</th>
+                            <?php if ($user_role === 'admin'): ?>
+                                <th>Pemilik Host</th>
+                            <?php endif; ?>
                             <th>Instrumen</th>
                             <th>Peserta</th>
                             <th>Status</th>
@@ -159,6 +179,9 @@ $no = 1;
                                 <td><?= $no++ ?></td>
                                 <td><span class="badge bg-warning text-dark fs-5 font-monospace"><?= htmlspecialchars($s['pin']) ?></span></td>
                                 <td><?= htmlspecialchars($s['session_name']) ?></td>
+                                <?php if ($user_role === 'admin'): ?>
+                                    <td><span class="badge bg-secondary"><?= htmlspecialchars($s['host_name'] ?? 'System') ?></span></td>
+                                <?php endif; ?>
                                 <td><span class="badge bg-info text-dark"><?= str_replace('_', ' ', $s['instrument_type']) ?></span></td>
                                 <td><strong><?= $s['total_respondents'] ?></strong> Peserta</td>
                                 <td>
@@ -168,20 +191,11 @@ $no = 1;
                                 </td>
                                 <td class="text-center text-nowrap">
                                     <div class="btn-group btn-group-sm">
-                                        <a href="detail?session_id=<?= urlencode($s['id']) ?>" class="btn btn-primary">
-                                            Detail
-                                        </a>
-
-                                        <a href="qrcode?pin=<?= urlencode($s['pin']) ?>" target="_blank" class="btn btn-dark">
-                                            QR Code
-                                        </a>
-
+                                        <a href="detail?session_id=<?= urlencode($s['id']) ?>" class="btn btn-primary">Detail</a>
+                                        <a href="qrcode?pin=<?= urlencode($s['pin']) ?>" target="_blank" class="btn btn-dark">QR Code</a>
                                         <a href="host?toggle_id=<?= urlencode($s['id']) ?>" class="btn <?= $s['status'] === 'active' ? 'btn-outline-secondary' : 'btn-outline-success' ?>">
                                             <?= $s['status'] === 'active' ? 'Nonaktifkan' : 'Aktifkan' ?>
                                         </a>
-                                        <a href="leaderboard?session_id=<?= urlencode($s['id']) ?>" target="_blank" class="btn btn-info text-white">Leaderboard</a>
-
-                                        <!-- Tombol Hapus dengan penanganan parameter string ID -->
                                         <button type="button" class="btn btn-danger" onclick="confirmDelete('<?= htmlspecialchars($s['id']) ?>', '<?= htmlspecialchars($s['pin']) ?>')">Hapus</button>
                                     </div>
                                 </td>
@@ -194,11 +208,11 @@ $no = 1;
     </div>
 
     <!-- Modal Form Buat PIN -->
-    <div class="modal fade" id="createPinModal" tabindex="-1" data-bs-backdrop="static" aria-labelledby="createPinModalLabel" aria-hidden="true">
+    <div class="modal fade" id="createPinModal" tabindex="-1" data-bs-backdrop="static" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title fw-bold" id="createPinModalLabel">Buat PIN Key Baru</h5>
+                    <h5 class="modal-title fw-bold">Buat PIN Key Baru</h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <form method="POST">
@@ -233,14 +247,12 @@ $no = 1;
             <p>We're sorry but this apps doesn't work properly without JavaScript enabled. Please enable it to continue.</p>
         </div>
     </noscript>
-    <!-- Scripts JavaScript -->
     <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.datatables.net/fixedheader/3.4.0/js/dataTables.fixedHeader.min.js"></script>
-
     <script>
         $(document).ready(function() {
             var table = $('#hostTable').DataTable({

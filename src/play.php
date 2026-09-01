@@ -1,4 +1,10 @@
 <?php
+// 1. PENGUNGKIAN CACHE BROWSER
+// Memastikan browser tidak menyimpan halaman di memori cache agar saat tombol Back ditekan halaman dipaksa merefresh
+header("Cache-Control: no-cache, no-store, must-revalidate");
+header("Pragma: no-cache");
+header("Expires: 0");
+
 require 'config.php';
 
 $respondent_id = isset($_GET['respondent_id']) ? trim($_GET['respondent_id']) : null;
@@ -19,30 +25,39 @@ $stmt = $pdo->prepare("
 $stmt->execute([$respondent_id]);
 $respondent = $stmt->fetch();
 
-// 1. Validasi Apakah Responden / Session ID Ditemukan
+// Validasi Apakah Responden / Session ID Ditemukan
 if (!$respondent) {
-    header("Location: index?error=session_not_found");
+    header("Location: /?error=session_not_found");
     exit;
 }
 
-// 2. Validasi Apakah Session Aktif (Mengecek nilai status dari gs.status)
+// Validasi Apakah Session Aktif
 $is_session_active = false;
-
 if (isset($respondent['session_status'])) {
     $status_lower = strtolower(trim($respondent['session_status']));
-    // Mengizinkan status yang bernilai 'active', 'aktif', '1', atau 'open'
     if (in_array($status_lower, ['active', 'aktif', '1', 'open'])) {
         $is_session_active = true;
     }
 }
 
 if (!$is_session_active) {
-    // Jika sesi tidak aktif / ditutup, arahkan kembali ke index
     header("Location: /?error=session_inactive");
     exit;
 }
 
-// Verifikasi Progress Level
+// 2. VALIDASI SERVER-SIDE PROGRESS LEVEL & TOTAL LEVEL
+// Cek jumlah total level yang tersedia untuk tipe instrumen ini
+$stmt_total = $pdo->prepare("SELECT COUNT(*) AS total_levels FROM levels WHERE instrument_type = ?");
+$stmt_total->execute([$respondent['instrument_type']]);
+$total_levels = (int)$stmt_total->fetchColumn();
+
+// Jika responden sudah menyelesaikan semua level dan menekan tombol Back, langsung alihkan ke halaman result
+if ($total_levels > 0 && $respondent['completed_level'] >= $total_levels) {
+    header("Location: result?respondent_id=" . $respondent_id);
+    exit;
+}
+
+// Verifikasi Progress Level (Mencegah responden melompati level atau mengakses level melebihi haknya)
 if ($current_level_order > ($respondent['completed_level'] + 1)) {
     $allowed_level = $respondent['completed_level'] + 1;
     header("Location: play?respondent_id=$respondent_id&level=$allowed_level");
@@ -366,8 +381,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </noscript>
 
-    <!-- Script Konfirmasi SweetAlert2 -->
     <script>
+        // 3. PENCEGAHAN NAVIGASI TOMBOL BACK BROWSER VIA JAVASCRIPT HISTORY
+        history.pushState(null, null, location.href);
+        window.onpopstate = function() {
+            history.pushState(null, null, location.href);
+            Swal.fire({
+                title: 'Navigasi Dibatasi',
+                text: 'Harap selesaikan pengisian lembar kerja menggunakan tombol yang tersedia di halaman.',
+                icon: 'warning',
+                confirmButtonColor: '#0d6efd',
+                confirmButtonText: 'Mengerti'
+            });
+        };
+
+        // Konfirmasi Simpan dengan SweetAlert2
         document.getElementById('btnSimpan').addEventListener('click', function() {
             const form = document.getElementById('levelForm');
 

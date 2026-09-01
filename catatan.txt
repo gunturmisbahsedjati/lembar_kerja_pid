@@ -1,0 +1,18 @@
+ALTER TABLE `users` ADD `role` ENUM('admin','host') NOT NULL DEFAULT 'host' AFTER `name`, ADD `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP AFTER `role`;
+
+
+ALTER TABLE `game_sessions` ADD COLUMN `host_id` INT NULL AFTER `id`;
+
+ALTER TABLE `game_sessions`
+  ADD CONSTRAINT `fk_session_user`
+  FOREIGN KEY (`host_id`) REFERENCES `users`(`id`) ON DELETE CASCADE;
+
+ALTER TABLE `users`
+  ADD COLUMN `status` ENUM('active', 'inactive') NOT NULL DEFAULT 'active' AFTER `role`;
+
+
+INSERT INTO `users` (`username`, `password`, `name`, `role`) VALUES
+('host_a', '$2y$10$e0MYzXyjpJS7Pd0RVvHwHe118a8y.fP5j4fK8Y9x51XqM1sL6w3mG', 'Pengajar A', 'host'),
+('host_b', '$2y$10$e0MYzXyjpJS7Pd0RVvHwHe118a8y.fP5j4fK8Y9x51XqM1sL6w3mG', 'Pengajar B', 'host');
+
+pass host123
