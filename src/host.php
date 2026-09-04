@@ -143,6 +143,7 @@ $no = 1;
         <div class="d-flex align-items-center gap-3">
             <span class="text-white">Halo, <strong><?= htmlspecialchars($_SESSION['user_name']) ?></strong> (<?= strtoupper($user_role) ?>)</span>
             <a href="users" class="btn btn-info text-white btn-sm">HOST</a>
+            <a href="db_backup" class="btn btn-info text-white btn-sm">Backup/Restore DB</a>
             <a href="/" target="_blank" class="btn btn-success text-white btn-sm">Link Form</a>
             <a href="host?action=logout" class="btn btn-outline-danger btn-sm">Logout</a>
         </div>
